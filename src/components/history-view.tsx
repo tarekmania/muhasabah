@@ -16,14 +16,14 @@ export function HistoryView({ entries, onEditEntry }: HistoryViewProps) {
 
   const filteredEntries = selectedFilter 
     ? entries.filter(entry => 
-        entry.good?.tagIds.includes(selectedFilter) || 
-        entry.improve?.tagIds.includes(selectedFilter)
+        (entry.good?.tagIds || entry.good?.itemIds || []).includes(selectedFilter) || 
+        (entry.improve?.tagIds || entry.improve?.itemIds || []).includes(selectedFilter)
       )
     : entries;
 
   const allUsedTags = [...new Set([
-    ...entries.flatMap(e => e.good?.tagIds || []),
-    ...entries.flatMap(e => e.improve?.tagIds || [])
+    ...entries.flatMap(e => e.good?.tagIds || e.good?.itemIds || []),
+    ...entries.flatMap(e => e.improve?.tagIds || e.improve?.itemIds || [])
   ])];
 
   const filterTags = seedTags.filter(tag => allUsedTags.includes(tag.id));
@@ -129,7 +129,7 @@ export function HistoryView({ entries, onEditEntry }: HistoryViewProps) {
                     <div className="space-y-2">
                       <h4 className="text-sm font-medium text-primary">Good deeds</h4>
                       <div className="flex flex-wrap gap-1">
-                        {entry.good.tagIds.map(tagId => (
+                        {(entry.good.tagIds || entry.good.itemIds || []).map(tagId => (
                           <TagChip
                             key={tagId}
                             label={getTagLabel(tagId)}
@@ -150,7 +150,7 @@ export function HistoryView({ entries, onEditEntry }: HistoryViewProps) {
                     <div className="space-y-2">
                       <h4 className="text-sm font-medium text-secondary-foreground">Areas to improve</h4>
                       <div className="flex flex-wrap gap-1">
-                        {entry.improve.tagIds.map(tagId => (
+                        {(entry.improve.tagIds || entry.improve.itemIds || []).map(tagId => (
                           <TagChip
                             key={tagId}
                             label={getTagLabel(tagId)}

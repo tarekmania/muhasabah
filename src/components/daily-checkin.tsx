@@ -15,10 +15,10 @@ interface DailyCheckinProps {
 
 export function DailyCheckin({ onSave, existingEntry }: DailyCheckinProps) {
   const [selectedGoodTags, setSelectedGoodTags] = useState<string[]>(
-    existingEntry?.good?.tagIds || []
+    existingEntry?.good?.tagIds || existingEntry?.good?.itemIds || []
   );
   const [selectedImproveTags, setSelectedImproveTags] = useState<string[]>(
-    existingEntry?.improve?.tagIds || []
+    existingEntry?.improve?.tagIds || existingEntry?.improve?.itemIds || []
   );
   const [goodNote, setGoodNote] = useState(existingEntry?.good?.note || '');
   const [improveNote, setImproveNote] = useState(existingEntry?.improve?.note || '');
@@ -52,10 +52,12 @@ export function DailyCheckin({ onSave, existingEntry }: DailyCheckinProps) {
       dateISO: new Date().toISOString().split('T')[0],
       good: selectedGoodTags.length > 0 || goodNote ? {
         tagIds: selectedGoodTags,
+        itemIds: selectedGoodTags, // For backward compatibility
         note: goodNote || undefined
       } : null,
       improve: selectedImproveTags.length > 0 || improveNote ? {
         tagIds: selectedImproveTags,
+        itemIds: selectedImproveTags, // For backward compatibility
         note: improveNote || undefined,
         tawbah
       } : null,

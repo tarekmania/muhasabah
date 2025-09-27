@@ -46,23 +46,29 @@ export function useStorage() {
     let updatedEntries: Entry[];
     
     if (existingIndex >= 0) {
-      // Update existing entry
+      // Update existing entry by merging data
       updatedEntries = [...entries];
+      const existing = updatedEntries[existingIndex];
+      
       updatedEntries[existingIndex] = {
-        ...updatedEntries[existingIndex],
-        ...entryData,
-        id: updatedEntries[existingIndex].id,
+        ...existing,
+        id: existing.id,
         dateISO: today,
+        // Merge good data
+        good: entryData.good || existing.good,
+        // Merge improve data  
+        improve: entryData.improve || existing.improve,
+        // Update dua
+        dua: entryData.dua !== undefined ? entryData.dua : existing.dua,
       };
     } else {
       // Create new entry
       const newEntry: Entry = {
         id: `entry_${Date.now()}`,
         dateISO: today,
-        good: null,
-        improve: null,
-        dua: undefined,
-        ...entryData,
+        good: entryData.good || null,
+        improve: entryData.improve || null,
+        dua: entryData.dua,
       };
       updatedEntries = [newEntry, ...entries];
     }
