@@ -10,6 +10,8 @@ const itemChipVariants = cva(
       variant: {
         good: "border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 hover:border-primary/30 hover:shadow-gentle",
         improve: "border-secondary/30 bg-secondary/10 text-secondary-foreground hover:bg-secondary/20 hover:border-secondary/40 hover:shadow-warm",
+        severe: "border-red-300 bg-red-50 text-red-700 hover:bg-red-100 hover:border-red-400 dark:bg-red-950/20 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-950/30",
+        missed_opportunity: "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:border-amber-400 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-800 dark:hover:bg-amber-950/30",
         neutral: "border-muted-foreground/20 bg-muted/5 text-muted-foreground hover:bg-muted/10",
       },
       selected: {
@@ -32,6 +34,16 @@ const itemChipVariants = cva(
         variant: "improve",
         selected: true,
         class: "bg-secondary text-secondary-foreground border-secondary shadow-warm",
+      },
+      {
+        variant: "severe",
+        selected: true,
+        class: "bg-red-600 text-red-50 border-red-600 shadow-lg dark:bg-red-700 dark:border-red-700",
+      },
+      {
+        variant: "missed_opportunity",
+        selected: true,
+        class: "bg-amber-600 text-amber-50 border-amber-600 shadow-lg dark:bg-amber-700 dark:border-amber-700",
       },
       {
         variant: "neutral",

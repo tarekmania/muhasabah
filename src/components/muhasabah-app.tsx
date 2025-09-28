@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { AppHeader } from '@/components/app-header';
-import { DailyCheckin } from '@/components/daily-checkin';
-import { CatalogEntry } from '@/components/catalog-entry';
+import { UnifiedEntryFlow } from '@/components/unified-entry-flow';
 import { HistoryView } from '@/components/history-view';
 import { SettingsView } from '@/components/settings-view';
 import { useStorage } from '@/hooks/use-storage';
@@ -100,7 +99,7 @@ export function MuhasabahApp() {
                 </p>
               </div>
             )}
-            <CatalogEntry 
+            <UnifiedEntryFlow 
               onSave={handleSaveEntry}
               existingEntry={editingEntry || getTodayEntry()}
             />

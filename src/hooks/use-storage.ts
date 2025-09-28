@@ -58,8 +58,14 @@ export function useStorage() {
         good: entryData.good || existing.good,
         // Merge improve data  
         improve: entryData.improve || existing.improve,
+        // Merge severe slip data
+        severeSlip: entryData.severeSlip || existing.severeSlip,
+        // Merge missed opportunity data
+        missedOpportunity: entryData.missedOpportunity || existing.missedOpportunity,
         // Update dua
         dua: entryData.dua !== undefined ? entryData.dua : existing.dua,
+        // Update privacy level
+        privacy_level: entryData.privacy_level || existing.privacy_level,
       };
     } else {
       // Create new entry
@@ -68,7 +74,10 @@ export function useStorage() {
         dateISO: today,
         good: entryData.good || null,
         improve: entryData.improve || null,
+        severeSlip: entryData.severeSlip || null,
+        missedOpportunity: entryData.missedOpportunity || null,
         dua: entryData.dua,
+        privacy_level: entryData.privacy_level || 'normal',
       };
       updatedEntries = [newEntry, ...entries];
     }

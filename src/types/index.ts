@@ -1,4 +1,4 @@
-export type ItemType = 'GOOD' | 'IMPROVE';
+export type ItemType = 'GOOD' | 'IMPROVE' | 'SEVERE' | 'MISSED_OPPORTUNITY';
 
 export type CatalogCategory = {
   id: string;
@@ -50,7 +50,10 @@ export type Entry = {
   dateISO: string;
   good: { tagIds?: string[]; itemIds?: string[]; note?: string; qty?: Record<string, number> } | null;
   improve: { tagIds?: string[]; itemIds?: string[]; note?: string; tawbah?: boolean; qty?: Record<string, number> } | null;
+  severeSlip?: { itemIds: string[]; note?: string; tawbah: boolean; guidance?: string; qty?: Record<string, number> } | null;
+  missedOpportunity?: { itemIds: string[]; note?: string; intention?: string; qty?: Record<string, number> } | null;
   dua?: string;
+  privacy_level?: 'normal' | 'private' | 'highly_sensitive';
 };
 
 export type Settings = {
@@ -137,6 +140,19 @@ export const seedCatalog: Catalog = {
     { id: 'digital-detox', title: 'Digital detox time', category_id: 'digital', type: 'GOOD', emoji: '🔌' },
     { id: 'excessive-social-media', title: 'Excessive social media', category_id: 'digital', type: 'IMPROVE', emoji: '📱' },
     { id: 'inappropriate-content', title: 'Inappropriate content', category_id: 'digital', type: 'IMPROVE', emoji: '👁️' },
+    
+    // Severe Issues (require immediate tawbah)
+    { id: 'major-sin', title: 'Major transgression', category_id: 'character', type: 'SEVERE', emoji: '⚠️' },
+    { id: 'neglected-obligation', title: 'Neglected religious duty', category_id: 'prayer', type: 'SEVERE', emoji: '🚨' },
+    { id: 'harmed-others', title: 'Caused harm to others', category_id: 'community', type: 'SEVERE', emoji: '💔' },
+    { id: 'persistent-sin', title: 'Repeated wrongdoing', category_id: 'character', type: 'SEVERE', emoji: '🔄' },
+    
+    // Missed Opportunities for Closeness to Allah
+    { id: 'missed-dhikr', title: 'Could have remembered Allah', category_id: 'quran', type: 'MISSED_OPPORTUNITY', emoji: '💭' },
+    { id: 'missed-charity', title: 'Could have given charity', category_id: 'charity', type: 'MISSED_OPPORTUNITY', emoji: '🤲' },
+    { id: 'missed-kindness', title: 'Could have been kinder', category_id: 'character', type: 'MISSED_OPPORTUNITY', emoji: '💝' },
+    { id: 'missed-prayer-focus', title: 'Could have prayed with more focus', category_id: 'prayer', type: 'MISSED_OPPORTUNITY', emoji: '🎯' },
+    { id: 'missed-gratitude', title: 'Could have been more grateful', category_id: 'character', type: 'MISSED_OPPORTUNITY', emoji: '🙏' },
   ],
   templates: [
     {
