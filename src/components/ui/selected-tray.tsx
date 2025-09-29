@@ -1,100 +1,153 @@
 import React from 'react';
+import { CatalogItem, SelectedState } from '@/types';
 import { Button } from '@/components/ui/button';
-import { ItemChip } from '@/components/ui/item-chip';
-import { SpiritualCard, SpiritualCardContent } from '@/components/ui/spiritual-card';
-import { X, Bookmark, Trash2 } from 'lucide-react';
-import { type CatalogItem, type SelectedState } from '@/types';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { X, Plus } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
 interface SelectedTrayProps {
+  selectedItems: CatalogItem[];
   selectedState: SelectedState;
-  items: CatalogItem[];
-  totalCount: number;
+  onCountChange: (itemId: string, newCount: number) => void;
   onRemoveItem: (itemId: string) => void;
+  onSaveToday: () => void;
   onClear: () => void;
-  onSaveAsTemplate?: () => void;
-  onAddToToday: () => void;
-  className?: string;
+  isVisible: boolean;
 }
 
 export function SelectedTray({
+  selectedItems,
   selectedState,
-  items,
-  totalCount,
+  onCountChange,
   onRemoveItem,
+  onSaveToday,
   onClear,
-  onSaveAsTemplate,
-  onAddToToday,
-  className
+  isVisible
 }: SelectedTrayProps) {
-  if (selectedState.ids.length === 0) return null;
+  if (!isVisible || selectedItems.length === 0) {
+    return null;
+  }
 
-  const selectedItems = items.filter(item => selectedState.ids.includes(item.id));
+  const totalCount = Object.values(selectedState.qty).reduce((sum, count) => sum + count, 0);
+
+  const handleQuickAdd = (itemId: string, amount: number) => {
+    const currentCount = selectedState.qty[itemId] || 0;
+    onCountChange(itemId, currentCount + amount);
+  };
+
+  const handleCountChange = (itemId: string, newCount: number) => {
+    if (newCount <= 0) {
+      onRemoveItem(itemId);
+    } else {
+      onCountChange(itemId, newCount);
+    }
+  };
 
   return (
-    <div className={`fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-t shadow-2xl ${className}`}>
-      <SpiritualCard variant="elevated" className="m-4 mb-safe">
-        <SpiritualCardContent className="p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground">Selected</span>
-              <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary font-bold">
-                {totalCount}
-              </span>
-            </div>
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t shadow-lg">
+      <Card className="rounded-none border-0 border-t">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <span>Selected</span>
+              <Badge variant="secondary">{selectedItems.length}</Badge>
+            </CardTitle>
             <Button
               variant="ghost"
               size="sm"
               onClick={onClear}
-              className="h-8 w-8 p-0"
+              className="text-muted-foreground hover:text-foreground"
             >
               <X className="h-4 w-4" />
             </Button>
           </div>
-
-          {/* Selected items chips */}
-          <div className="flex flex-wrap gap-2 mb-4 max-h-20 overflow-y-auto">
-            {selectedItems.slice(0, 6).map(item => (
-              <ItemChip
-                key={item.id}
-                emoji={item.emoji}
-                label={item.title}
-                variant={item.type === 'GOOD' ? 'good' : 'improve'}
-                selected={true}
-                quantity={selectedState.qty[item.id]}
-                size="sm"
-                onToggle={() => onRemoveItem(item.id)}
-              />
-            ))}
-            {selectedItems.length > 6 && (
-              <div className="text-xs text-muted-foreground px-2 py-1">
-                +{selectedItems.length - 6} more
-              </div>
-            )}
+        </CardHeader>
+        
+        <CardContent className="pt-0">
+          {/* Selected Items List */}
+          <div className="space-y-3 max-h-32 overflow-y-auto mb-4">
+            {selectedItems.map((item) => {
+              const count = selectedState.qty[item.id] || 0;
+              return (
+                <div key={item.id} className="flex items-center justify-between bg-muted/50 rounded-lg p-3">
+                  <div className="flex items-center gap-2 flex-1">
+                    <span className="text-lg">{item.emoji}</span>
+                    <span className="font-medium text-sm">{item.title}</span>
+                    {item.suggested_counts && item.suggested_counts.length > 0 && (
+                      <div className="flex gap-1">
+                        {item.suggested_counts.slice(0, 2).map((suggestedCount) => (
+                          <Button
+                            key={suggestedCount}
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleQuickAdd(item.id, suggestedCount)}
+                            className="h-6 px-2 text-xs"
+                          >
+                            +{suggestedCount}
+                          </Button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    {/* Count Controls */}
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleCountChange(item.id, count - 1)}
+                        className="h-8 w-8 p-0"
+                      >
+                        -
+                      </Button>
+                      <span className="font-bold text-lg min-w-[2rem] text-center">
+                        {count}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleCountChange(item.id, count + 1)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    
+                    {/* Remove Button */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onRemoveItem(item.id)}
+                      className="h-8 w-8 p-0 text-muted-foreground hover:text-red-600"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
-          {/* Action buttons */}
-          <div className="flex gap-2">
-            <Button
-              onClick={onAddToToday}
-              className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
-              size="lg"
+          <Separator className="my-4" />
+
+          {/* Summary and Action */}
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-muted-foreground">
+              <span className="font-medium">{totalCount}</span> total deeds selected
+            </div>
+            
+            <Button 
+              onClick={onSaveToday}
+              className="bg-green-600 hover:bg-green-700 text-white font-medium px-6"
+              disabled={selectedItems.length === 0}
             >
               Add {totalCount} to Today
             </Button>
-            
-            {onSaveAsTemplate && (
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={onSaveAsTemplate}
-                className="px-3"
-              >
-                <Bookmark className="h-4 w-4" />
-              </Button>
-            )}
           </div>
-        </SpiritualCardContent>
-      </SpiritualCard>
+        </CardContent>
+      </Card>
     </div>
   );
 }

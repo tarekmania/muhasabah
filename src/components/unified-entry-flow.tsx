@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { SpiritualCard, SpiritualCardHeader, SpiritualCardTitle, SpiritualCardContent } from '@/components/ui/spiritual-card';
-import { ItemChip } from '@/components/ui/item-chip';
+import { EnhancedItemChip } from '@/components/ui/enhanced-item-chip';
 import { SelectedTray } from '@/components/ui/selected-tray';
 import { SevereReflectionCard } from '@/components/reflection/severe-reflection-card';
 import { MissedOpportunityCard } from '@/components/reflection/missed-opportunity-card';
@@ -178,29 +178,25 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
     clearSelected();
   };
 
-  const renderItemChip = (item: CatalogItem) => {
-    let variant: 'good' | 'improve' | 'severe' | 'missed_opportunity' = 'good';
-    if (item.type === 'IMPROVE') variant = 'improve';
-    else if (item.type === 'SEVERE') variant = 'severe';
-    else if (item.type === 'MISSED_OPPORTUNITY') variant = 'missed_opportunity';
+  const handleCountChange = (itemId: string, newCount: number) => {
+    if (newCount <= 0) {
+      removeFromSelected(itemId);
+    } else {
+      const currentCount = selectedState.qty[itemId] || 0;
+      const difference = newCount - currentCount;
+      addToSelected(itemId, difference);
+    }
+  };
 
+  const renderItemChip = (item: CatalogItem) => {
     return (
-      <ItemChip
+      <EnhancedItemChip
         key={item.id}
-        emoji={item.emoji}
-        label={item.title}
-        variant={variant}
-        selected={selectedState.ids.includes(item.id)}
+        item={item}
+        count={selectedState.qty[item.id] || 0}
+        onCountChange={handleCountChange}
         usageCount={getItemUsageCount(item.id)}
-        quantity={selectedState.qty[item.id]}
-        onToggle={() => {
-          if (selectedState.ids.includes(item.id)) {
-            removeFromSelected(item.id);
-          } else {
-            addToSelected(item.id, 1);
-          }
-        }}
-        onLongPress={() => handleLongPress(item)}
+        isSelected={selectedState.ids.includes(item.id)}
       />
     );
   };
@@ -446,12 +442,13 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
 
       {/* Selected Tray */}
       <SelectedTray
+        selectedItems={catalog.items.filter(item => selectedState.ids.includes(item.id))}
         selectedState={selectedState}
-        items={catalog.items}
-        totalCount={totalSelected}
+        onCountChange={handleCountChange}
         onRemoveItem={removeFromSelected}
+        onSaveToday={handleAddToToday}
         onClear={clearSelected}
-        onAddToToday={handleAddToToday}
+        isVisible={totalSelected > 0}
       />
     </div>
   );

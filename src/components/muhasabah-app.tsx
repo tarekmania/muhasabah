@@ -3,11 +3,14 @@ import { AppHeader } from '@/components/app-header';
 import { UnifiedEntryFlow } from '@/components/unified-entry-flow';
 import { HistoryView } from '@/components/history-view';
 import { SettingsView } from '@/components/settings-view';
+import { TemplatesGallery } from '@/components/templates-gallery';
+import { DailyLedger } from '@/components/daily-ledger';
+import { WeeklyReview } from '@/components/weekly-review';
 import { useStorage } from '@/hooks/use-storage';
 import { useToast } from '@/hooks/use-toast';
-import { type Entry } from '@/types';
+import { type Entry, seedCatalog } from '@/types';
 
-type ViewType = 'today' | 'history' | 'settings';
+type ViewType = 'today' | 'templates' | 'ledger' | 'weekly' | 'history' | 'settings';
 
 export function MuhasabahApp() {
   const [currentView, setCurrentView] = useState<ViewType>('today');
@@ -63,6 +66,41 @@ export function MuhasabahApp() {
     setEditingEntry(null);
   };
 
+  const handleApplyTemplate = (template: any) => {
+    // This would integrate with the unified entry flow
+    // For now, just switch to today view
+    setCurrentView('today');
+    toast({
+      title: "Template applied",
+      description: `${template.title} has been loaded for today's entry.`,
+    });
+  };
+
+  const handleSaveIntention = (intention: string) => {
+    // Save weekly intention (could be stored in settings or separate storage)
+    toast({
+      title: "Intention saved",
+      description: "May Allah help you achieve this intention.",
+    });
+  };
+
+  // Get current date for ledger and weekly views
+  const today = new Date().toISOString().split('T')[0];
+  const todayEntry = getTodayEntry();
+  
+  // Calculate week range for weekly review
+  const getWeekRange = () => {
+    const now = new Date();
+    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+    const endOfWeek = new Date(now.setDate(now.getDate() - now.getDay() + 6));
+    return {
+      start: startOfWeek.toISOString().split('T')[0],
+      end: endOfWeek.toISOString().split('T')[0]
+    };
+  };
+
+  const weekRange = getWeekRange();
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-peace flex items-center justify-center">
@@ -106,6 +144,39 @@ export function MuhasabahApp() {
           </>
         )}
         
+        {currentView === 'templates' && (
+          <div className="container mx-auto px-4 py-6">
+            <TemplatesGallery
+              templates={seedCatalog.templates}
+              catalogItems={seedCatalog.items}
+              usageStats={{ itemUsage: {}, templateUsage: {} }}
+              onApplyTemplate={handleApplyTemplate}
+            />
+          </div>
+        )}
+
+        {currentView === 'ledger' && (
+          <div className="container mx-auto px-4 py-6">
+            <DailyLedger
+              entry={todayEntry}
+              catalogItems={seedCatalog.items}
+              date={today}
+            />
+          </div>
+        )}
+
+        {currentView === 'weekly' && (
+          <div className="container mx-auto px-4 py-6">
+            <WeeklyReview
+              entries={entries.slice(-7)} // Last 7 entries
+              catalogItems={seedCatalog.items}
+              weekStart={weekRange.start}
+              weekEnd={weekRange.end}
+              onSaveIntention={handleSaveIntention}
+            />
+          </div>
+        )}
+
         {currentView === 'history' && (
           <HistoryView 
             entries={entries}
