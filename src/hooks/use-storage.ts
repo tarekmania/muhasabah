@@ -54,14 +54,32 @@ export function useStorage() {
         ...existing,
         id: existing.id,
         dateISO: today,
-        // Merge good data
-        good: entryData.good || existing.good,
+        // Merge good data - combine itemIds and merge quantities
+        good: entryData.good ? {
+          itemIds: [...(existing.good?.itemIds || []), ...entryData.good.itemIds].filter((id, index, arr) => arr.indexOf(id) === index),
+          note: entryData.good.note || existing.good?.note,
+          qty: { ...(existing.good?.qty || {}), ...(entryData.good.qty || {}) }
+        } : existing.good,
         // Merge improve data  
-        improve: entryData.improve || existing.improve,
+        improve: entryData.improve ? {
+          itemIds: [...(existing.improve?.itemIds || []), ...entryData.improve.itemIds].filter((id, index, arr) => arr.indexOf(id) === index),
+          note: entryData.improve.note || existing.improve?.note,
+          qty: { ...(existing.improve?.qty || {}), ...(entryData.improve.qty || {}) }
+        } : existing.improve,
         // Merge severe slip data
-        severeSlip: entryData.severeSlip || existing.severeSlip,
+        severeSlip: entryData.severeSlip ? {
+          itemIds: [...(existing.severeSlip?.itemIds || []), ...entryData.severeSlip.itemIds].filter((id, index, arr) => arr.indexOf(id) === index),
+          note: entryData.severeSlip.note || existing.severeSlip?.note,
+          tawbah: entryData.severeSlip.tawbah || existing.severeSlip?.tawbah || false,
+          qty: { ...(existing.severeSlip?.qty || {}), ...(entryData.severeSlip.qty || {}) }
+        } : existing.severeSlip,
         // Merge missed opportunity data
-        missedOpportunity: entryData.missedOpportunity || existing.missedOpportunity,
+        missedOpportunity: entryData.missedOpportunity ? {
+          itemIds: [...(existing.missedOpportunity?.itemIds || []), ...entryData.missedOpportunity.itemIds].filter((id, index, arr) => arr.indexOf(id) === index),
+          note: entryData.missedOpportunity.note || existing.missedOpportunity?.note,
+          intention: entryData.missedOpportunity.intention || existing.missedOpportunity?.intention,
+          qty: { ...(existing.missedOpportunity?.qty || {}), ...(entryData.missedOpportunity.qty || {}) }
+        } : existing.missedOpportunity,
         // Update dua
         dua: entryData.dua !== undefined ? entryData.dua : existing.dua,
         // Update privacy level
