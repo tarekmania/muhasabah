@@ -125,6 +125,13 @@ const ItemChip = React.forwardRef<HTMLDivElement, ItemChipProps>(
       setIsLongPressing(false);
     };
 
+    const handleMouseLeave = () => {
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+      }
+      setIsLongPressing(false);
+    };
+
     React.useEffect(() => {
       return () => {
         if (longPressTimer.current) {
@@ -141,7 +148,7 @@ const ItemChip = React.forwardRef<HTMLDivElement, ItemChipProps>(
         onTouchEnd={handleTouchEnd}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
         {...props}
       >
         {emoji && <span className="text-base">{emoji}</span>}
