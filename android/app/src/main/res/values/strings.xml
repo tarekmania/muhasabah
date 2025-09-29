@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Muhasabah</string>
+    <string name="title_activity_main">Muhasabah</string>
+    <string name="package_name">com.tarekmania.muhasabah</string>
+    <string name="custom_url_scheme">com.tarekmania.muhasabah</string>
+</resources>
