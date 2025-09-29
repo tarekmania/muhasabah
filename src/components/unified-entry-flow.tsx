@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -33,6 +33,7 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
     addToSelected,
     removeFromSelected,
     clearSelected,
+    setSelected,
     applyTemplate,
     updateItemUsage,
   } = useCatalog();
@@ -45,6 +46,9 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
   const [missedIntention, setMissedIntention] = useState(existingEntry?.missedOpportunity?.intention || '');
   const [dua, setDua] = useState(existingEntry?.dua || '');
   const [duaIndex, setDuaIndex] = useState(0);
+  
+  // Track the last hydrated entry to prevent re-hydration
+  const lastHydratedEntryId = useRef<string | null>(null);
   
   // Quantity selector state
   const [quantitySelector, setQuantitySelector] = useState<{
@@ -60,9 +64,12 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
     currentQuantity: 1,
   });
 
-  // Load existing entry data on mount
+  // Load existing entry data on mount (idempotent)
   useEffect(() => {
-    if (existingEntry) {
+    if (existingEntry && existingEntry.id !== lastHydratedEntryId.current) {
+      // Clear existing selection first to prevent accumulation
+      setSelected({ ids: [], qty: {} });
+      
       // Pre-select items from existing entry
       const allItemIds = [
         ...(existingEntry.good?.itemIds || []),
@@ -78,12 +85,18 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
         ...(existingEntry.missedOpportunity?.qty || {}),
       };
 
-      // Apply to selected state
-      allItemIds.forEach(id => {
-        addToSelected(id, combinedQty[id] || 1);
-      });
+      // Set the complete state atomically
+      if (allItemIds.length > 0) {
+        setSelected({
+          ids: [...new Set(allItemIds)],
+          qty: combinedQty
+        });
+      }
+      
+      // Mark this entry as hydrated
+      lastHydratedEntryId.current = existingEntry.id;
     }
-  }, [existingEntry, addToSelected]);
+  }, [existingEntry?.id, setSelected]);
 
   // Search results
   const searchResults = searchQuery ? searchItems(searchQuery) : [];

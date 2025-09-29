@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { seedCatalog, type Catalog, type CatalogItem, type QuickTemplate, type SelectedState, type UsageStats } from '@/types';
 
 const USAGE_STORAGE_KEY = 'muhasabah_usage_stats';
@@ -58,28 +58,32 @@ export function useCatalog() {
       .sort((a, b) => getItemUsageCount(b.id) - getItemUsageCount(a.id))
       .slice(0, limit);
 
-  // Selected state management
-  const addToSelected = (itemId: string, quantity = 1) => {
+  // Selected state management with stable callbacks
+  const addToSelected = useCallback((itemId: string, quantity = 1) => {
     setSelectedState(prev => {
       const newIds = prev.ids.includes(itemId) ? prev.ids : [...prev.ids, itemId];
       const newQty = { ...prev.qty, [itemId]: (prev.qty[itemId] || 0) + quantity };
       return { ids: newIds, qty: newQty };
     });
-  };
+  }, []);
 
-  const removeFromSelected = (itemId: string) => {
+  const removeFromSelected = useCallback((itemId: string) => {
     setSelectedState(prev => {
       const newIds = prev.ids.filter(id => id !== itemId);
       const { [itemId]: _, ...newQty } = prev.qty;
       return { ids: newIds, qty: newQty };
     });
-  };
+  }, []);
 
-  const clearSelected = () => {
+  const clearSelected = useCallback(() => {
     setSelectedState({ ids: [], qty: {} });
-  };
+  }, []);
 
-  const applyTemplate = (template: QuickTemplate) => {
+  const setSelected = useCallback((newState: SelectedState | ((prev: SelectedState) => SelectedState)) => {
+    setSelectedState(newState);
+  }, []);
+
+  const applyTemplate = useCallback((template: QuickTemplate) => {
     const allIds = [...(template.good_item_ids || []), ...(template.improve_item_ids || [])];
     setSelectedState(prev => {
       const newIds = [...new Set([...prev.ids, ...allIds])];
@@ -102,7 +106,7 @@ export function useCatalog() {
       localStorage.setItem(USAGE_STORAGE_KEY, JSON.stringify(updated));
       return updated;
     });
-  };
+  }, []);
 
   const updateItemUsage = (itemIds: string[]) => {
     setUsageStats(prev => {
@@ -131,6 +135,7 @@ export function useCatalog() {
     addToSelected,
     removeFromSelected,
     clearSelected,
+    setSelected,
     applyTemplate,
     updateItemUsage,
   };
