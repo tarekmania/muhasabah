@@ -2,9 +2,8 @@ import React, { useState } from 'react';
 import { CatalogItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Plus, Minus, RotateCcw } from 'lucide-react';
 
 interface EnhancedItemChipProps {
   item: CatalogItem;
@@ -21,7 +20,7 @@ export function EnhancedItemChip({
   usageCount = 0,
   isSelected = false 
 }: EnhancedItemChipProps) {
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
   const handleQuickAdd = (amount: number) => {
     onCountChange(item.id, count + amount);
@@ -41,6 +40,10 @@ export function EnhancedItemChip({
     }
   };
 
+  const handleSimpleClick = () => {
+    handleQuickAdd(1);
+  };
+
   const chipClasses = `
     relative inline-flex items-center gap-2 px-3 py-2 rounded-full border-2 transition-all
     ${isSelected ? 'ring-2 ring-green-500 ring-offset-2' : ''}
@@ -49,207 +52,134 @@ export function EnhancedItemChip({
   `;
 
   return (
-    <>
-      <Sheet open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <SheetTrigger asChild>
-          <div className={chipClasses}>
-            <span className="text-lg">{item.emoji}</span>
-            <span className="font-medium text-sm">{item.title}</span>
-            
-            {/* Suggested counts display */}
-            {item.suggested_counts && item.suggested_counts.length > 0 && (
-              <div className="flex gap-1">
-                {item.suggested_counts.slice(0, 3).map((suggestedCount) => (
-                  <Badge 
-                    key={suggestedCount} 
-                    variant="secondary" 
-                    className="text-xs px-1.5 py-0.5"
-                  >
-                    {suggestedCount}
-                  </Badge>
-                ))}
-              </div>
-            )}
-            
-            {/* Current count */}
-            {count > 0 && (
-              <Badge className="bg-green-600 text-white font-bold">
-                {count}
-              </Badge>
-            )}
-            
-            {/* Usage badge */}
-            {usageCount > 0 && (
-              <Badge variant="outline" className="text-xs">
-                ×{usageCount}
-              </Badge>
-            )}
-          </div>
-        </SheetTrigger>
-
-        <SheetContent side="bottom" className="h-[80vh]">
-          <SheetHeader>
-            <SheetTitle className="flex items-center gap-2">
-              <span className="text-2xl">{item.emoji}</span>
-              {item.title}
-            </SheetTitle>
-          </SheetHeader>
+    <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+      <PopoverTrigger asChild>
+        <div 
+          className={chipClasses}
+          onClick={handleSimpleClick}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            setIsPopoverOpen(true);
+          }}
+        >
+          <span className="text-lg">{item.emoji}</span>
+          <span className="font-medium text-sm">{item.title}</span>
           
-          <div className="mt-6 space-y-6">
-            {/* Arabic Text */}
-            {item.arabic && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Arabic</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl text-right font-arabic leading-relaxed">
-                    {item.arabic}
-                  </p>
-                </CardContent>
-              </Card>
-            )}
+          {/* Suggested counts display */}
+          {item.suggested_counts && item.suggested_counts.length > 0 && (
+            <div className="flex gap-1">
+              {item.suggested_counts.slice(0, 2).map((suggestedCount) => (
+                <Badge 
+                  key={suggestedCount} 
+                  variant="secondary" 
+                  className="text-xs px-1.5 py-0.5"
+                >
+                  {suggestedCount}
+                </Badge>
+              ))}
+            </div>
+          )}
+          
+          {/* Current count */}
+          {count > 0 && (
+            <Badge className="bg-green-600 text-white font-bold">
+              {count}
+            </Badge>
+          )}
+          
+          {/* Usage badge */}
+          {usageCount > 0 && (
+            <Badge variant="outline" className="text-xs">
+              ×{usageCount}
+            </Badge>
+          )}
+        </div>
+      </PopoverTrigger>
 
-            {/* Transliteration & Meaning */}
-            {(item.transliteration || item.meaning) && (
-              <Card>
-                <CardContent className="pt-6">
-                  {item.transliteration && (
-                    <div className="mb-3">
-                      <p className="text-sm font-medium text-muted-foreground">Transliteration</p>
-                      <p className="text-lg italic">{item.transliteration}</p>
-                    </div>
-                  )}
-                  {item.meaning && (
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Meaning</p>
-                      <p className="text-lg">{item.meaning}</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Quick Count Buttons */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Quick Add</CardTitle>
-                <CardDescription>
-                  Current count: <span className="font-bold text-lg">{count}</span>
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-3">
-                  {/* Preset count buttons */}
-                  {item.suggested_counts?.map((suggestedCount) => (
-                    <Button
-                      key={suggestedCount}
-                      variant="outline"
-                      onClick={() => handleQuickAdd(suggestedCount)}
-                      className="h-12 text-lg font-bold"
-                    >
-                      +{suggestedCount}
-                    </Button>
-                  ))}
-                  
-                  {/* Common quick add buttons */}
-                  <Button
-                    variant="outline"
-                    onClick={() => handleQuickAdd(1)}
-                    className="h-12 text-lg font-bold"
-                  >
-                    +1
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => handleQuickAdd(10)}
-                    className="h-12 text-lg font-bold"
-                  >
-                    +10
-                  </Button>
-                </div>
-
-                <Separator className="my-4" />
-
-                {/* Manual count adjustment */}
-                <div className="flex items-center gap-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleCountChange(count - 1)}
-                    disabled={count <= 0}
-                  >
-                    -
-                  </Button>
-                  <span className="text-2xl font-bold min-w-[3rem] text-center">
-                    {count}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleCountChange(count + 1)}
-                  >
-                    +
-                  </Button>
-                  {count > 0 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleCountChange(0)}
-                      className="text-red-600"
-                    >
-                      Reset
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Context & Reference */}
-            {(item.context || item.hadith_reference || item.description) && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Details</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {item.context && (
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Context</p>
-                      <p className="capitalize">{item.context.replace('_', ' ')}</p>
-                    </div>
-                  )}
-                  {item.description && (
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Description</p>
-                      <p>{item.description}</p>
-                    </div>
-                  )}
-                  {item.hadith_reference && (
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Reference</p>
-                      <p className="text-sm bg-muted p-2 rounded">{item.hadith_reference}</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Usage Stats */}
-            {usageCount > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Your Progress</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    You've logged this deed <span className="font-bold">{usageCount}</span> times
-                  </p>
-                </CardContent>
-              </Card>
-            )}
+      <PopoverContent className="w-80">
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">{item.emoji}</span>
+            <div>
+              <h3 className="font-semibold">{item.title}</h3>
+              {item.transliteration && (
+                <p className="text-sm text-muted-foreground">{item.transliteration}</p>
+              )}
+            </div>
           </div>
-        </SheetContent>
-      </Sheet>
-    </>
+
+          {/* Quick Add Buttons */}
+          {item.suggested_counts && item.suggested_counts.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Quick Add:</p>
+              <div className="flex gap-2 flex-wrap">
+                {item.suggested_counts.map((suggestedCount) => (
+                  <Button
+                    key={suggestedCount}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleQuickAdd(suggestedCount)}
+                    className="h-8"
+                  >
+                    +{suggestedCount}
+                  </Button>
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleQuickAdd(10)}
+                  className="h-8"
+                >
+                  +10
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Count Controls */}
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Current Count:</p>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleCountChange(count - 1)}
+                disabled={count <= 0}
+                className="h-8 w-8 p-0"
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <span className="font-bold text-lg min-w-[3rem] text-center">
+                {count}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleCountChange(count + 1)}
+                className="h-8 w-8 p-0"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleCountChange(0)}
+                className="h-8 w-8 p-0"
+                disabled={count <= 0}
+              >
+                <RotateCcw className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Usage Stats */}
+          {usageCount > 0 && (
+            <div className="text-sm text-muted-foreground">
+              Used {usageCount} times before
+            </div>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
