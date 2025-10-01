@@ -16,6 +16,7 @@ type ViewType = 'today' | 'templates' | 'ledger' | 'weekly' | 'history' | 'setti
 export function MuhasabahApp() {
   const [currentView, setCurrentView] = useState<ViewType>('today');
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
+  const [ledgerDate, setLedgerDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const { toast } = useToast();
   
   const {
@@ -57,6 +58,14 @@ export function MuhasabahApp() {
     setCurrentView('today');
   };
 
+  const handleViewChange = (view: ViewType) => {
+    setCurrentView(view);
+    // Reset ledger date to today when switching views
+    if (view === 'ledger') {
+      setLedgerDate(new Date().toISOString().split('T')[0]);
+    }
+  };
+
   const handlePanicDelete = () => {
     clearAllData();
     setCurrentView('today');
@@ -89,6 +98,11 @@ export function MuhasabahApp() {
   const today = new Date().toISOString().split('T')[0];
   const todayEntry = getTodayEntry();
   
+  // Get entry for ledger date
+  const getLedgerEntry = () => {
+    return entries.find(e => e.dateISO === ledgerDate) || null;
+  };
+  
   // Calculate week range for weekly review
   const getWeekRange = () => {
     const now = new Date();
@@ -119,7 +133,7 @@ export function MuhasabahApp() {
     <div className="min-h-screen bg-gradient-peace">
       <AppHeader 
         currentView={currentView} 
-        onViewChange={setCurrentView}
+        onViewChange={handleViewChange}
       />
       
       <main className="pb-6">
@@ -160,9 +174,13 @@ export function MuhasabahApp() {
         {currentView === 'ledger' && (
           <div className="container mx-auto px-4 py-6">
             <DailyLedger
-              entry={todayEntry}
+              entry={getLedgerEntry()}
               catalogItems={seedCatalog.items}
-              date={today}
+              date={ledgerDate}
+              entries={entries}
+              onDateChange={(newDate) => {
+                setLedgerDate(newDate);
+              }}
             />
           </div>
         )}
