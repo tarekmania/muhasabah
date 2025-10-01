@@ -30,6 +30,9 @@ export function useStorage() {
       try {
         console.log('Initializing IndexedDB...');
         
+        // Initialize database first
+        await getDB();
+        
         // Check database health
         const healthy = await checkDBHealth();
         setDbHealthy(healthy);
