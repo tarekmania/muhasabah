@@ -22,7 +22,11 @@ export default function Entry({ entries, onSave, onUpdate }: EntryPageProps) {
   
   // Determine the date to work with
   const targetDate = date || format(new Date(), 'yyyy-MM-dd');
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date(targetDate));
+  // Parse date string properly to avoid timezone issues
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    const [year, month, day] = targetDate.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  });
   
   // Find existing entry for this date
   const existingEntry = useMemo(() => 
@@ -62,8 +66,8 @@ export default function Entry({ entries, onSave, onUpdate }: EntryPageProps) {
 
   const handleDateSelect = (date: Date) => {
     const dateISO = format(date, 'yyyy-MM-dd');
-    navigate(`/entry/${dateISO}`);
     setSelectedDate(date);
+    navigate(`/entry/${dateISO}`);
   };
 
   const isToday = targetDate === format(new Date(), 'yyyy-MM-dd');

@@ -29,7 +29,9 @@ export function HistoryView({ entries, onEditEntry }: HistoryViewProps) {
   const filterTags = seedTags.filter(tag => allUsedTags.includes(tag.id));
 
   const formatDate = (dateISO: string) => {
-    const date = new Date(dateISO);
+    // Parse date string properly to avoid timezone issues
+    const [year, month, day] = dateISO.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
     const today = new Date();
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);

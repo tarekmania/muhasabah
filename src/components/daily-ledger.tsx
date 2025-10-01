@@ -18,7 +18,11 @@ interface DailyLedgerProps {
 }
 
 export function DailyLedger({ entry, catalogItems, date, entries, onDateChange }: DailyLedgerProps) {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date(date));
+  // Parse date string properly to avoid timezone issues
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    const [year, month, day] = date.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  });
 
   const getItemById = (id: string) => {
     return catalogItems.find(item => item.id === id);
@@ -142,7 +146,10 @@ export function DailyLedger({ entry, catalogItems, date, entries, onDateChange }
   };
 
   // Get dates with entries for calendar highlighting
-  const datesWithEntries = entries.map(e => new Date(e.dateISO));
+  const datesWithEntries = entries.map(e => {
+    const [year, month, day] = e.dateISO.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  });
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
