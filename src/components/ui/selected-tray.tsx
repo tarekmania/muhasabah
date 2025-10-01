@@ -45,7 +45,7 @@ export function SelectedTray({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t shadow-lg pb-safe">
+    <div className="fixed bottom-16 left-0 right-0 z-40 bg-background border-t shadow-lg">
       <Card className="rounded-none border-0 border-t">
         <CardHeader className="pb-3 pt-4">
           <div className="flex items-center justify-between">

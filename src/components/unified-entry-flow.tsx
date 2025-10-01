@@ -271,11 +271,6 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
                         <span className="text-2xl">{category.emoji}</span>
                         <div className="text-left">
                           <div className="font-medium">{category.title}</div>
-                          {category.description && (
-                            <div className="text-xs text-muted-foreground font-normal mt-0.5">
-                              {category.description}
-                            </div>
-                          )}
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
