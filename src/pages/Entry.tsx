@@ -45,7 +45,7 @@ export default function Entry({ entries, onSave, onUpdate }: EntryPageProps) {
       onUpdate(updated);
       toast({
         title: "Entry Updated",
-        description: `Your entry for ${format(new Date(targetDate), 'MMMM d, yyyy')} has been updated.`,
+        description: `Your entry for ${format(selectedDate, 'MMMM d, yyyy')} has been updated.`,
       });
     } else {
       // Create new entry
@@ -57,7 +57,7 @@ export default function Entry({ entries, onSave, onUpdate }: EntryPageProps) {
       onSave(newEntry);
       toast({
         title: "Entry Saved",
-        description: `Your entry for ${format(new Date(targetDate), 'MMMM d, yyyy')} has been saved.`,
+        description: `Your entry for ${format(selectedDate, 'MMMM d, yyyy')} has been saved.`,
       });
     }
     
@@ -71,7 +71,7 @@ export default function Entry({ entries, onSave, onUpdate }: EntryPageProps) {
   };
 
   const isToday = targetDate === format(new Date(), 'yyyy-MM-dd');
-  const isPast = new Date(targetDate) < new Date(format(new Date(), 'yyyy-MM-dd'));
+  const isPast = targetDate < format(new Date(), 'yyyy-MM-dd');
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto p-4">
@@ -117,7 +117,7 @@ export default function Entry({ entries, onSave, onUpdate }: EntryPageProps) {
             
             <div className="pt-4 border-t">
               <h3 className="font-semibold text-lg mb-1">
-                {format(new Date(targetDate), 'EEEE, MMMM d, yyyy')}
+                {format(selectedDate, 'EEEE, MMMM d, yyyy')}
               </h3>
               <p className="text-sm text-muted-foreground">
                 {existingEntry 
