@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Sparkles, TrendingUp, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { saveInsight, type AIInsight } from '@/lib/db';
 
 interface AIInsightsProps {
   note?: string;
@@ -16,6 +17,7 @@ export function AIInsights({ note, selectedItems, entries, type }: AIInsightsPro
   const [insight, setInsight] = useState<string | null>(null);
   const [patterns, setPatterns] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   const { toast } = useToast();
 
   const analyzeReflection = async () => {
@@ -39,11 +41,21 @@ export function AIInsights({ note, selectedItems, entries, type }: AIInsightsPro
       
       const data = await response.json();
       setInsight(data.insight);
-    } catch (error) {
+      
+      // Auto-save insight
+      const insightData: AIInsight = {
+        id: `insight-${Date.now()}`,
+        type: 'reflection',
+        content: data.insight,
+        createdAt: new Date().toISOString(),
+      };
+      await saveInsight(insightData);
+      setIsSaved(true);
+    } catch (error: any) {
       console.error('Error analyzing reflection:', error);
       toast({
-        title: "Analysis unavailable",
-        description: "Unable to generate insights at this time",
+        title: "Analysis Failed",
+        description: error.message || "Unable to analyze reflection. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -73,11 +85,22 @@ export function AIInsights({ note, selectedItems, entries, type }: AIInsightsPro
       const data = await response.json();
       setPatterns(data.patterns);
       setInsight(data.aiInsight);
-    } catch (error) {
+      
+      // Auto-save insight
+      const insightData: AIInsight = {
+        id: `insight-${Date.now()}`,
+        type: 'patterns',
+        content: data.aiInsight,
+        createdAt: new Date().toISOString(),
+        entryIds: entries?.map(e => e.id),
+      };
+      await saveInsight(insightData);
+      setIsSaved(true);
+    } catch (error: any) {
       console.error('Error analyzing patterns:', error);
       toast({
-        title: "Analysis unavailable",
-        description: "Unable to generate pattern insights at this time",
+        title: "Analysis Failed",
+        description: error.message || "Unable to analyze patterns. Please try again.",
         variant: "destructive"
       });
     } finally {

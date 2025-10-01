@@ -7,6 +7,15 @@ import { validateEntry, validateSettings, validateEntries } from './validators';
 const DB_VERSION = CURRENT_DB_VERSION;
 const DB_NAME = 'muhasabah-db';
 
+export interface AIInsight {
+  id: string;
+  type: 'reflection' | 'patterns';
+  content: string;
+  createdAt: string;
+  entryIds?: string[];
+  isFavorite?: boolean;
+}
+
 interface MuhasabahDB extends DBSchema {
   entries: {
     key: string;
@@ -24,6 +33,11 @@ interface MuhasabahDB extends DBSchema {
       version: number;
       exportedAt?: string;
     };
+  };
+  insights: {
+    key: string;
+    value: AIInsight;
+    indexes: { 'by-date': string };
   };
 }
 
@@ -59,6 +73,13 @@ export async function getDB(): Promise<IDBPDatabase<MuhasabahDB>> {
       if (!db.objectStoreNames.contains('metadata')) {
         db.createObjectStore('metadata');
         console.log('Created metadata store');
+      }
+
+      // Create insights store
+      if (!db.objectStoreNames.contains('insights')) {
+        const insightsStore = db.createObjectStore('insights', { keyPath: 'id' });
+        insightsStore.createIndex('by-date', 'createdAt');
+        console.log('Created insights store');
       }
 
       // Note: Data migrations handled separately via transform functions during import
@@ -199,14 +220,48 @@ export async function getSettings(): Promise<Settings | undefined> {
  */
 export async function clearAllData(): Promise<void> {
   const db = await getDB();
-  const tx = db.transaction(['entries', 'settings', 'metadata'], 'readwrite');
+  const tx = db.transaction(['entries', 'settings', 'metadata', 'insights'], 'readwrite');
   await Promise.all([
     tx.objectStore('entries').clear(),
     tx.objectStore('settings').clear(),
     tx.objectStore('metadata').clear(),
+    tx.objectStore('insights').clear(),
   ]);
   await tx.done;
   console.log('All data cleared from IndexedDB');
+}
+
+// Insights management
+export async function saveInsight(insight: AIInsight): Promise<void> {
+  const db = await getDB();
+  await db.put('insights', insight);
+  console.log('Insight saved:', insight.id);
+}
+
+export async function getAllInsights(): Promise<AIInsight[]> {
+  const db = await getDB();
+  return db.getAll('insights');
+}
+
+export async function getInsightsByType(type: 'reflection' | 'patterns'): Promise<AIInsight[]> {
+  const db = await getDB();
+  const allInsights = await db.getAll('insights');
+  return allInsights.filter(insight => insight.type === type);
+}
+
+export async function toggleInsightFavorite(id: string): Promise<void> {
+  const db = await getDB();
+  const insight = await db.get('insights', id);
+  if (insight) {
+    insight.isFavorite = !insight.isFavorite;
+    await db.put('insights', insight);
+  }
+}
+
+export async function deleteInsight(id: string): Promise<void> {
+  const db = await getDB();
+  await db.delete('insights', id);
+  console.log('Insight deleted:', id);
 }
 
 /**

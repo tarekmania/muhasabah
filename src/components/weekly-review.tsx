@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { TrendingUp, Heart, Target, Sparkles } from 'lucide-react';
+import { AIInsights } from './ai-insights';
 
 interface WeeklyReviewProps {
   entries: Entry[];
@@ -339,6 +340,14 @@ export function WeeklyReview({
           </div>
         </CardContent>
       </Card>
+
+      {/* AI Pattern Recognition */}
+      {entries.length > 0 && (
+        <AIInsights
+          entries={entries}
+          type="patterns"
+        />
+      )}
 
       {/* Closing reminder */}
       <div className="text-center text-sm text-muted-foreground bg-muted/20 p-4 rounded-lg border">

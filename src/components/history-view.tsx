@@ -3,8 +3,10 @@ import { SpiritualCard, SpiritualCardHeader, SpiritualCardTitle, SpiritualCardCo
 import { TagChip } from '@/components/ui/tag-chip';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Filter, CheckCircle2 } from 'lucide-react';
+import { Calendar, Filter, CheckCircle2, Sparkles, ChevronDown } from 'lucide-react';
 import { seedTags, type Entry, type Tag } from '@/types';
+import { AIInsights } from './ai-insights';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 
 interface HistoryViewProps {
   entries: Entry[];
@@ -64,6 +66,23 @@ export function HistoryView({ entries, onEditEntry }: HistoryViewProps) {
         <h2 className="text-2xl font-bold text-foreground">Your Journey</h2>
         <p className="text-muted-foreground">Reflect on your spiritual growth</p>
       </div>
+
+      {/* AI Pattern Recognition Section */}
+      {entries.length > 0 && (
+        <Collapsible defaultOpen className="space-y-2">
+          <CollapsibleTrigger className="flex items-center gap-2 text-lg font-semibold hover:text-primary transition-colors w-full group">
+            <Sparkles className="w-5 h-5" />
+            <span>AI Growth Insights</span>
+            <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 group-data-[state=open]:rotate-180" />
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <AIInsights
+              entries={entries}
+              type="patterns"
+            />
+          </CollapsibleContent>
+        </Collapsible>
+      )}
 
       {/* Filter Section */}
       {filterTags.length > 0 && (
