@@ -14,13 +14,31 @@ interface SevereReflectionCardProps {
   onNoteChange: (note: string) => void;
   onItemToggle: (itemId: string) => void;
   getItemUsageCount: (itemId: string) => number;
+  severity?: 'light' | 'moderate' | 'severe';
+  onSeverityChange?: (itemId: string, severity: 'light' | 'moderate' | 'severe') => void;
 }
 
 const tawbahGuidance = [
-  "Remember: Allah's mercy encompasses all things. Turn to Him with sincere repentance.",
-  "The Prophet ﷺ said: 'All the sons of Adam are sinners, but the best of sinners are those who repent.'",
-  "Allah says: 'And whoever repents and does righteous deeds - then Allah will accept his repentance.'",
-  "Make istighfar, seek forgiveness, and resolve never to return to this action.",
+  {
+    verse: "Indeed, Allah loves those who are constantly repentant. (Quran 2:222)",
+    action: "Make sincere Tawbah immediately",
+    steps: ["1. Stop the sin immediately", "2. Feel genuine remorse", "3. Commit to never return"]
+  },
+  {
+    verse: "Say, 'O My servants who have transgressed against themselves, do not despair of the mercy of Allah. Indeed, Allah forgives all sins.' (Quran 39:53)",
+    action: "Never lose hope in Allah's mercy",
+    steps: ["1. Recognize Allah's infinite mercy", "2. Make sincere du'a", "3. Increase good deeds"]
+  },
+  {
+    verse: "And turn to Allah in repentance, all of you, that you might succeed. (Quran 24:31)",
+    action: "Return to Allah with humility",
+    steps: ["1. Pray two rak'ahs of Tawbah", "2. Make istighfar abundantly", "3. Seek forgiveness at night"]
+  },
+  {
+    verse: "Indeed, good deeds do away with misdeeds. (Quran 11:114)",
+    action: "Follow bad deeds with good deeds",
+    steps: ["1. Perform extra prayers", "2. Give charity", "3. Help someone in need"]
+  }
 ];
 
 export function SevereReflectionCard({
@@ -39,6 +57,8 @@ export function SevereReflectionCard({
   const nextGuidance = () => {
     setCurrentGuidance((prev) => (prev + 1) % tawbahGuidance.length);
   };
+
+  const currentGuidanceData = tawbahGuidance[currentGuidance];
 
   return (
     <SpiritualCard variant="default" className="border-red-200 dark:border-red-900">
@@ -115,16 +135,27 @@ export function SevereReflectionCard({
                   <Heart className="h-4 w-4 text-red-600" />
                   <h4 className="font-medium text-red-700 dark:text-red-400">Guidance for Tawbah</h4>
                 </div>
-                <p className="text-sm text-red-700 dark:text-red-300 leading-relaxed">
-                  {tawbahGuidance[currentGuidance]}
+                <p className="text-sm text-red-700 dark:text-red-300 leading-relaxed italic mb-2">
+                  {currentGuidanceData.verse}
                 </p>
+                <div className="bg-background/60 rounded p-3 space-y-2">
+                  <p className="text-sm font-medium">{currentGuidanceData.action}</p>
+                  <div className="space-y-1">
+                    {currentGuidanceData.steps.map((step, idx) => (
+                      <div key={idx} className="flex items-start gap-2 text-xs text-muted-foreground">
+                        <span className="text-red-500">•</span>
+                        <span>{step}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={nextGuidance}
-                  className="border-red-300 text-red-700 hover:bg-red-100 dark:border-red-700 dark:text-red-400"
+                  className="border-red-300 text-red-700 hover:bg-red-100 dark:border-red-700 dark:text-red-400 w-full"
                 >
-                  Next Guidance
+                  Next Guidance →
                 </Button>
               </div>
             )}
