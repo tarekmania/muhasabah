@@ -37,7 +37,7 @@ export function AppHeader({ currentView, onViewChange }: AppHeaderProps) {
             className={currentView === 'templates' ? 'bg-primary text-primary-foreground' : ''}
           >
             <Sparkles className="h-4 w-4 mr-1" />
-            Templates
+            Quick Start
           </Button>
           <Button
             variant={currentView === 'ledger' ? 'default' : 'ghost'}

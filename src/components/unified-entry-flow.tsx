@@ -207,7 +207,7 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
       <SpiritualCard variant="peaceful">
         <SpiritualCardContent className="p-0">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="explore" className="gap-2">
                 <Sparkles className="h-4 w-4" />
                 Explore
@@ -215,10 +215,6 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
               <TabsTrigger value="search" className="gap-2">
                 <Search className="h-4 w-4" />
                 Search
-              </TabsTrigger>
-              <TabsTrigger value="templates" className="gap-2">
-                <BookOpen className="h-4 w-4" />
-                Templates
               </TabsTrigger>
             </TabsList>
 
@@ -309,43 +305,6 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
               </ScrollArea>
             </TabsContent>
 
-            {/* Templates Tab */}
-            <TabsContent value="templates" className="p-6 space-y-4">
-              <ScrollArea className="h-[500px]">
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-lg font-medium mb-3">Curated Templates</h3>
-                    <div className="grid gap-3">
-                      {templatesWithCounts.map(template => (
-                        <SpiritualCard key={template.id} variant="default" className="cursor-pointer hover:shadow-md transition-shadow">
-                          <SpiritualCardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                {template.emoji && <span className="text-2xl">{template.emoji}</span>}
-                                <div>
-                                  <h4 className="font-medium">{template.title}</h4>
-                                  <p className="text-sm text-muted-foreground">
-                                    {template.deedCount} deeds
-                                    {template.usageCount > 0 && ` • Used ${template.usageCount} times`}
-                                  </p>
-                                </div>
-                              </div>
-                              <Button
-                                size="sm"
-                                onClick={() => applyTemplate(template)}
-                                variant="outline"
-                              >
-                                Apply
-                              </Button>
-                            </div>
-                          </SpiritualCardContent>
-                        </SpiritualCard>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </ScrollArea>
-            </TabsContent>
           </Tabs>
         </SpiritualCardContent>
       </SpiritualCard>
@@ -397,35 +356,6 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
             className="resize-none"
             rows={3}
           />
-        </SpiritualCardContent>
-      </SpiritualCard>
-
-      {/* Du'a Section */}
-      <SpiritualCard variant="elevated">
-        <SpiritualCardHeader>
-          <SpiritualCardTitle>Tonight's Du'ā</SpiritualCardTitle>
-        </SpiritualCardHeader>
-        <SpiritualCardContent>
-          <div className="space-y-3">
-            <Textarea
-              placeholder="Enter your du'ā for tonight..."
-              value={dua}
-              onChange={(e) => setDua(e.target.value)}
-              className="resize-none font-serif text-base"
-              rows={3}
-              dir="rtl"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={suggestDua}
-              className="self-start"
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Suggest Du'ā
-            </Button>
-          </div>
         </SpiritualCardContent>
       </SpiritualCard>
 

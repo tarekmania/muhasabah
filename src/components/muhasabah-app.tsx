@@ -6,6 +6,7 @@ import { SettingsView } from '@/components/settings-view';
 import { TemplatesGallery } from '@/components/templates-gallery';
 import { DailyLedger } from '@/components/daily-ledger';
 import { WeeklyReview } from '@/components/weekly-review';
+import { TodayDashboard } from '@/components/today-dashboard';
 import { useStorage } from '@/hooks/use-storage';
 import { useToast } from '@/hooks/use-toast';
 import { type Entry, seedCatalog } from '@/types';
@@ -124,6 +125,7 @@ export function MuhasabahApp() {
       <main className="pb-6">
         {currentView === 'today' && (
           <>
+            <TodayDashboard entries={entries} todayEntry={getTodayEntry()} />
             {editingEntry && (
               <div className="bg-secondary/10 border-b border-secondary/20 p-4 text-center">
                 <p className="text-sm text-secondary-foreground">
