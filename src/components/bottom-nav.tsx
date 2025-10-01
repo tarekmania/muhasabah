@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 
 const navItems = [
   { title: "Dashboard", url: "/", icon: Home },
-  { title: "Entry", url: "/entry", icon: FileText },
+  { title: "Journal", url: "/entry", icon: FileText },
   { title: "Weekly", url: "/weekly", icon: Calendar },
   { title: "Routines", url: "/templates", icon: BookOpen },
   { title: "Settings", url: "/settings", icon: Settings },

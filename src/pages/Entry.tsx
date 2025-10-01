@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Check, FileText, Scale } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 import { SpiritualCard, SpiritualCardContent, SpiritualCardHeader, SpiritualCardTitle } from '@/components/ui/spiritual-card';
 import { UnifiedEntryFlow } from '@/components/unified-entry-flow';
 import { DailyLedger } from '@/components/daily-ledger';
@@ -80,13 +80,13 @@ export default function Entry({ entries, onSave, onUpdate }: EntryPageProps) {
   const isPast = targetDate < format(new Date(), 'yyyy-MM-dd');
 
   return (
-    <div className="space-y-4 max-w-5xl mx-auto p-4">
+    <div className="space-y-4 max-w-5xl mx-auto p-4 pb-20">
       {/* Date Selection */}
       <SpiritualCard variant="elevated">
         <SpiritualCardHeader>
           <SpiritualCardTitle className="flex items-center gap-2 text-base">
             <FileText className="h-4 w-4" />
-            {isToday ? 'Today' : isPast ? 'Past Entry' : 'Future Entry'}
+            {isToday ? 'Today\'s Journal' : isPast ? 'Past Journal' : 'Future Journal'}
           </SpiritualCardTitle>
         </SpiritualCardHeader>
         <SpiritualCardContent>
@@ -111,36 +111,26 @@ export default function Entry({ entries, onSave, onUpdate }: EntryPageProps) {
         </SpiritualCardContent>
       </SpiritualCard>
 
-      {/* Tabs for Entry & Balance Sheet */}
-      <Tabs defaultValue="entry" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="entry" className="gap-2">
-            <FileText className="h-4 w-4" />
-            Entry
-          </TabsTrigger>
-          <TabsTrigger value="balance" className="gap-2">
-            <Scale className="h-4 w-4" />
-            Balance
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="entry" className="mt-4">
-          <UnifiedEntryFlow
-            onSave={handleSave}
-            existingEntry={existingEntry}
-          />
-        </TabsContent>
-        
-        <TabsContent value="balance" className="mt-4">
-          <DailyLedger
-            entry={existingEntry || null}
-            catalogItems={catalog.items}
-            date={targetDate}
-            entries={entries}
-            onDateChange={handleDateChange}
-          />
-        </TabsContent>
-      </Tabs>
+      {/* Daily Balance Sheet - Shown First */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 px-1">
+          <Scale className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-sm font-medium text-muted-foreground">Spiritual Balance</h2>
+        </div>
+        <DailyLedger
+          entry={existingEntry || null}
+          catalogItems={catalog.items}
+          date={targetDate}
+          entries={entries}
+          onDateChange={handleDateChange}
+        />
+      </div>
+
+      {/* Entry Form */}
+      <UnifiedEntryFlow
+        onSave={handleSave}
+        existingEntry={existingEntry}
+      />
     </div>
   );
 }
