@@ -1,8 +1,10 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 import type { Entry, Settings } from '@/types';
+import { CURRENT_DB_VERSION, applyMigrations, transformEntry, transformSettings, transformEntries, getSafeVersion, isCompatibleVersion } from './migrations';
+import { validateEntry, validateSettings, validateEntries } from './validators';
 
 // Database schema version - increment when making schema changes
-const DB_VERSION = 1;
+const DB_VERSION = CURRENT_DB_VERSION;
 const DB_NAME = 'muhasabah-db';
 
 interface MuhasabahDB extends DBSchema {
@@ -37,7 +39,7 @@ export async function getDB(): Promise<IDBPDatabase<MuhasabahDB>> {
   }
 
   dbInstance = await openDB<MuhasabahDB>(DB_NAME, DB_VERSION, {
-    upgrade(db, oldVersion, newVersion) {
+    upgrade(db, oldVersion, newVersion, transaction) {
       console.log(`Upgrading database from version ${oldVersion} to ${newVersion}`);
       
       // Create entries store
@@ -58,6 +60,11 @@ export async function getDB(): Promise<IDBPDatabase<MuhasabahDB>> {
         db.createObjectStore('metadata');
         console.log('Created metadata store');
       }
+
+      // Note: Data migrations handled separately via transform functions during import
+      if (oldVersion > 0 && newVersion && newVersion > oldVersion) {
+        console.log(`Schema upgraded from v${oldVersion} to v${newVersion}`);
+      }
     },
     blocked() {
       console.warn('Database blocked - close other tabs with this app');
@@ -75,12 +82,22 @@ export async function getDB(): Promise<IDBPDatabase<MuhasabahDB>> {
 }
 
 /**
- * Save an entry to the database
+ * Save an entry to the database with validation
  */
 export async function saveEntry(entry: Entry): Promise<void> {
+  const validation = validateEntry(entry);
+  
+  if (!validation.isValid) {
+    console.warn('Entry validation failed, saving repaired version:', validation.errors);
+  }
+  
+  if (validation.warnings.length > 0) {
+    console.warn('Entry warnings:', validation.warnings);
+  }
+
   const db = await getDB();
-  await db.put('entries', entry);
-  console.log('Entry saved to IndexedDB:', entry.id);
+  await db.put('entries', validation.data);
+  console.log('Entry saved to IndexedDB:', validation.data.id, validation.repaired ? '(repaired)' : '');
 }
 
 /**
@@ -92,11 +109,23 @@ export async function getAllEntries(): Promise<Entry[]> {
 }
 
 /**
- * Get entry by ID
+ * Get entry by ID with validation
  */
 export async function getEntryById(id: string): Promise<Entry | undefined> {
   const db = await getDB();
-  return await db.get('entries', id);
+  const entry = await db.get('entries', id);
+  
+  if (!entry) return undefined;
+  
+  const validation = validateEntry(entry);
+  
+  if (validation.repaired) {
+    console.warn('Entry was repaired on read:', id, validation.warnings);
+    // Save the repaired version
+    await db.put('entries', validation.data);
+  }
+  
+  return validation.data;
 }
 
 /**
@@ -127,20 +156,42 @@ export async function deleteEntry(id: string): Promise<void> {
 }
 
 /**
- * Save settings to the database
+ * Save settings to the database with validation
  */
 export async function saveSettings(settings: Settings): Promise<void> {
+  const validation = validateSettings(settings);
+  
+  if (!validation.isValid) {
+    console.warn('Settings validation failed, saving repaired version:', validation.errors);
+  }
+  
+  if (validation.warnings.length > 0) {
+    console.warn('Settings warnings:', validation.warnings);
+  }
+
   const db = await getDB();
-  await db.put('settings', settings, 'app-settings');
-  console.log('Settings saved to IndexedDB');
+  await db.put('settings', validation.data, 'app-settings');
+  console.log('Settings saved to IndexedDB', validation.repaired ? '(repaired)' : '');
 }
 
 /**
- * Get settings from the database
+ * Get settings from the database with validation
  */
 export async function getSettings(): Promise<Settings | undefined> {
   const db = await getDB();
-  return await db.get('settings', 'app-settings');
+  const settings = await db.get('settings', 'app-settings');
+  
+  if (!settings) return undefined;
+  
+  const validation = validateSettings(settings);
+  
+  if (validation.repaired) {
+    console.warn('Settings were repaired on read:', validation.warnings);
+    // Save the repaired version
+    await db.put('settings', validation.data, 'app-settings');
+  }
+  
+  return validation.data;
 }
 
 /**
@@ -183,14 +234,51 @@ export async function exportData(): Promise<string> {
 }
 
 /**
- * Import data from JSON backup
+ * Import data from JSON backup with version handling and validation
  */
 export async function importData(jsonData: string): Promise<{ success: boolean; message: string }> {
   try {
     const data = JSON.parse(jsonData);
     
-    if (!data.version || !data.entries) {
-      return { success: false, message: 'Invalid backup file format' };
+    if (!data.entries) {
+      return { success: false, message: 'Invalid backup file format - missing entries' };
+    }
+
+    // Get safe version number
+    const sourceVersion = getSafeVersion(data);
+    
+    // Check version compatibility
+    if (!isCompatibleVersion(sourceVersion)) {
+      return { 
+        success: false, 
+        message: `Incompatible backup version: ${sourceVersion}. Please update the app.` 
+      };
+    }
+
+    console.log(`Importing data from version ${sourceVersion} to ${DB_VERSION}`);
+
+    // Transform and validate entries
+    const transformedEntries = transformEntries(data.entries, sourceVersion);
+    const entriesValidation = validateEntries(transformedEntries);
+    
+    if (entriesValidation.invalid > 0) {
+      console.warn(`${entriesValidation.invalid} invalid entries were skipped`);
+    }
+    
+    if (entriesValidation.repaired > 0) {
+      console.warn(`${entriesValidation.repaired} entries were repaired`);
+    }
+
+    // Transform and validate settings
+    let validatedSettings: Settings | undefined;
+    if (data.settings) {
+      const transformed = transformSettings(data.settings, sourceVersion);
+      const settingsValidation = validateSettings(transformed);
+      validatedSettings = settingsValidation.data;
+      
+      if (settingsValidation.repaired) {
+        console.warn('Settings were repaired during import:', settingsValidation.warnings);
+      }
     }
 
     const db = await getDB();
@@ -200,14 +288,14 @@ export async function importData(jsonData: string): Promise<{ success: boolean; 
     await tx.objectStore('entries').clear();
     await tx.objectStore('settings').clear();
 
-    // Import entries
-    for (const entry of data.entries) {
+    // Import validated entries
+    for (const entry of entriesValidation.valid) {
       await tx.objectStore('entries').put(entry);
     }
 
-    // Import settings
-    if (data.settings) {
-      await tx.objectStore('settings').put(data.settings, 'app-settings');
+    // Import validated settings
+    if (validatedSettings) {
+      await tx.objectStore('settings').put(validatedSettings, 'app-settings');
     }
 
     // Update metadata
@@ -218,8 +306,14 @@ export async function importData(jsonData: string): Promise<{ success: boolean; 
 
     await tx.done;
 
-    console.log('Data imported successfully');
-    return { success: true, message: `Imported ${data.entries.length} entries successfully` };
+    const message = [
+      `Imported ${entriesValidation.valid.length} entries successfully`,
+      entriesValidation.invalid > 0 ? `(${entriesValidation.invalid} invalid entries skipped)` : '',
+      entriesValidation.repaired > 0 ? `(${entriesValidation.repaired} entries repaired)` : '',
+    ].filter(Boolean).join(' ');
+
+    console.log('Data imported successfully:', message);
+    return { success: true, message };
   } catch (error) {
     console.error('Import failed:', error);
     return { success: false, message: `Import failed: ${error instanceof Error ? error.message : 'Unknown error'}` };
