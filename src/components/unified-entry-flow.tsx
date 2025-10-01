@@ -7,7 +7,6 @@ import { EnhancedItemChip } from '@/components/ui/enhanced-item-chip';
 import { SelectedTray } from '@/components/ui/selected-tray';
 import { SevereReflectionCard } from '@/components/reflection/severe-reflection-card';
 import { MissedOpportunityCard } from '@/components/reflection/missed-opportunity-card';
-import { GuidedReflectionCard } from '@/components/reflection/guided-reflection-card';
 import { QuantitySelector } from '@/components/reflection/quantity-selector';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -45,7 +44,6 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
   const [severeNote, setSevereNote] = useState(existingEntry?.severeSlip?.note || '');
   const [missedNote, setMissedNote] = useState(existingEntry?.missedOpportunity?.note || '');
   const [missedIntention, setMissedIntention] = useState(existingEntry?.missedOpportunity?.intention || '');
-  const [mood, setMood] = useState<'struggling' | 'stable' | 'growing' | 'thriving' | undefined>();
   const [dua, setDua] = useState(existingEntry?.dua || '');
   const [duaIndex, setDuaIndex] = useState(0);
   
@@ -345,14 +343,21 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
         getItemUsageCount={getItemUsageCount}
       />
 
-      {/* Guided Reflection Section */}
-      <GuidedReflectionCard
-        note={note}
-        onNoteChange={setNote}
-        mood={mood}
-        onMoodChange={setMood}
-        hasSelectedItems={totalSelected > 0}
-      />
+      {/* Note Section */}
+      <SpiritualCard variant="default">
+        <SpiritualCardHeader>
+          <SpiritualCardTitle>General Reflection Note</SpiritualCardTitle>
+        </SpiritualCardHeader>
+        <SpiritualCardContent>
+          <Textarea
+            placeholder="Any additional thoughts or reflections..."
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            className="resize-none"
+            rows={3}
+          />
+        </SpiritualCardContent>
+      </SpiritualCard>
 
       {/* Quantity Selector Modal */}
       <QuantitySelector

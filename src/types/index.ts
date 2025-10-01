@@ -129,9 +129,12 @@ export const seedCatalog: Catalog = {
     { id: 'time', title: 'Time & Priorities', emoji: '⏰' },
     { id: 'digital', title: 'Digital & Media', emoji: '📱' },
     { id: 'environment', title: 'Environment & Stewardship', emoji: '🌿' },
+    { id: 'finance', title: 'Finance & Wealth', emoji: '💰' },
+    { id: 'seasonal', title: 'Seasonal & Special', emoji: '🌙' },
+    { id: 'emotions', title: 'Emotions & Mental Health', emoji: '💭' },
   ],
   items: [
-    // Prayer & Worship - GOOD
+    // Prayer & Worship - GOOD (Expanded)
     { id: 'fajr', title: 'Fajr on time', category_id: 'prayer', type: 'GOOD', emoji: '🌅' },
     { id: 'five-prayers', title: '5 daily prayers', category_id: 'prayer', type: 'GOOD', emoji: '🤲' },
     { id: 'sunnah-prayers', title: 'Sunnah prayers', category_id: 'prayer', type: 'GOOD', emoji: '🕌' },
@@ -141,8 +144,22 @@ export const seedCatalog: Catalog = {
     { id: 'made-up-prayer', title: 'Made up missed prayer', category_id: 'prayer', type: 'GOOD', emoji: '🔄' },
     { id: 'mosque-attendance', title: 'Attended mosque', category_id: 'prayer', type: 'GOOD', emoji: '🕌' },
     { id: 'friday-prayer', title: 'Attended Jumu\'ah', category_id: 'prayer', type: 'GOOD', emoji: '🕌' },
+    { id: 'duha-prayer', title: 'Duha prayer', category_id: 'prayer', type: 'GOOD', emoji: '☀️' },
+    { id: 'witr-prayer', title: 'Witr prayer', category_id: 'prayer', type: 'GOOD', emoji: '🌙' },
+    { id: 'ishraq-prayer', title: 'Ishraq prayer', category_id: 'prayer', type: 'GOOD', emoji: '🌅' },
+    { id: 'tahiyyatul-masjid', title: 'Tahiyyat al-Masjid', category_id: 'prayer', type: 'GOOD', emoji: '🕌' },
+    { id: 'prayer-in-congregation', title: 'Prayed in congregation', category_id: 'prayer', type: 'GOOD', emoji: '👥' },
+    { id: 'first-row-prayer', title: 'Prayed in first row', category_id: 'prayer', type: 'GOOD', emoji: '1️⃣' },
+    { id: 'early-mosque-arrival', title: 'Arrived early to mosque', category_id: 'prayer', type: 'GOOD', emoji: '⏰' },
+    { id: 'salat-istikharah', title: 'Salat al-Istikhara', category_id: 'prayer', type: 'GOOD', emoji: '🤲' },
+    { id: 'salat-tawbah', title: 'Salat al-Tawbah', category_id: 'prayer', type: 'GOOD', emoji: '💚' },
+    { id: 'salat-hajah', title: 'Salat al-Hajah', category_id: 'prayer', type: 'GOOD', emoji: '🙏' },
+    { id: 'salat-taraweeh', title: 'Taraweeh prayer', category_id: 'prayer', type: 'GOOD', emoji: '🌙' },
+    { id: 'eclipse-prayer', title: 'Eclipse prayer', category_id: 'prayer', type: 'GOOD', emoji: '🌑' },
+    { id: 'rain-prayer', title: 'Rain prayer (Istisqa)', category_id: 'prayer', type: 'GOOD', emoji: '🌧️' },
+    { id: 'eid-prayer', title: 'Eid prayer', category_id: 'prayer', type: 'GOOD', emoji: '🎉' },
     
-    // Prayer & Worship - IMPROVE
+    // Prayer & Worship - IMPROVE (Expanded)
     { id: 'delayed-prayer', title: 'Delayed prayer', category_id: 'prayer', type: 'IMPROVE', emoji: '⏰' },
     { id: 'missed-prayer', title: 'Missed prayer', category_id: 'prayer', type: 'IMPROVE', emoji: '❌' },
     { id: 'rushed-prayer', title: 'Rushed through prayer', category_id: 'prayer', type: 'IMPROVE', emoji: '⏰' },
@@ -150,6 +167,11 @@ export const seedCatalog: Catalog = {
     { id: 'forgot-dhikr', title: 'Forgot dhikr after prayer', category_id: 'prayer', type: 'IMPROVE', emoji: '🤲' },
     { id: 'missed-sunnah', title: 'Skipped sunnah prayers', category_id: 'prayer', type: 'IMPROVE', emoji: '🕌' },
     { id: 'phone-during-prayer', title: 'Used phone during prayer time', category_id: 'prayer', type: 'IMPROVE', emoji: '📱' },
+    { id: 'prayed-without-wudu', title: 'Rushed wudu', category_id: 'prayer', type: 'IMPROVE', emoji: '💧' },
+    { id: 'missed-congregation', title: 'Missed congregation prayer', category_id: 'prayer', type: 'IMPROVE', emoji: '👥' },
+    { id: 'skipped-fajr', title: 'Skipped Fajr', category_id: 'prayer', type: 'IMPROVE', emoji: '❌' },
+    { id: 'combined-prayers-unnecessarily', title: 'Combined prayers without need', category_id: 'prayer', type: 'IMPROVE', emoji: '⚠️' },
+    { id: 'incomplete-prayer', title: 'Incomplete prayer movements', category_id: 'prayer', type: 'IMPROVE', emoji: '⚠️' },
     
     // Qur'an & Dhikr
     { id: 'quran-reading', title: 'Quran reading', category_id: 'quran', type: 'GOOD', emoji: '📖', suggested_counts: [1, 5, 10], default_count: 1 },
@@ -352,7 +374,15 @@ export const seedCatalog: Catalog = {
       default_count: 1
     },
     
-    // Character & Akhlaq - GOOD
+    // Qur'an & Dhikr - IMPROVE
+    { id: 'neglected-quran', title: 'Neglected Quran reading', category_id: 'quran', type: 'IMPROVE', emoji: '📖' },
+    { id: 'rushed-quran', title: 'Rushed through Quran', category_id: 'quran', type: 'IMPROVE', emoji: '⏰' },
+    { id: 'forgot-morning-adhkar', title: 'Forgot morning adhkar', category_id: 'quran', type: 'IMPROVE', emoji: '🌅' },
+    { id: 'forgot-evening-adhkar', title: 'Forgot evening adhkar', category_id: 'quran', type: 'IMPROVE', emoji: '🌇' },
+    { id: 'didnt-memorize', title: 'Didn\'t practice memorization', category_id: 'quran', type: 'IMPROVE', emoji: '📖' },
+    { id: 'skipped-dhikr', title: 'Skipped daily dhikr', category_id: 'quran', type: 'IMPROVE', emoji: '📿' },
+    
+    // Character & Akhlaq - GOOD (Massively Expanded)
     { id: 'patience', title: 'Showed patience', category_id: 'character', type: 'GOOD', emoji: '😌' },
     { id: 'kindness', title: 'Act of kindness', category_id: 'character', type: 'GOOD', emoji: '💝' },
     { id: 'forgiveness', title: 'Forgave someone', category_id: 'character', type: 'GOOD', emoji: '🤗' },
@@ -363,8 +393,26 @@ export const seedCatalog: Catalog = {
     { id: 'helped-someone', title: 'Helped someone in need', category_id: 'character', type: 'GOOD', emoji: '🤝' },
     { id: 'praised-allah', title: 'Praised Allah for blessing', category_id: 'character', type: 'GOOD', emoji: '🙌' },
     { id: 'made-peace', title: 'Made peace between people', category_id: 'character', type: 'GOOD', emoji: '🕊️' },
+    { id: 'kept-promise', title: 'Kept a promise', category_id: 'character', type: 'GOOD', emoji: '✅' },
+    { id: 'told-truth', title: 'Told the truth', category_id: 'character', type: 'GOOD', emoji: '💯' },
+    { id: 'showed-mercy', title: 'Showed mercy', category_id: 'character', type: 'GOOD', emoji: '💚' },
+    { id: 'gave-advice', title: 'Gave sincere advice', category_id: 'character', type: 'GOOD', emoji: '💬' },
+    { id: 'lowered-gaze', title: 'Lowered gaze', category_id: 'character', type: 'GOOD', emoji: '👀' },
+    { id: 'spoke-well', title: 'Spoke well of someone', category_id: 'character', type: 'GOOD', emoji: '💬' },
+    { id: 'concealed-fault', title: 'Concealed someone\'s fault', category_id: 'character', type: 'GOOD', emoji: '🤐' },
+    { id: 'visited-sick', title: 'Visited the sick', category_id: 'character', type: 'GOOD', emoji: '🏥' },
+    { id: 'removed-harm', title: 'Removed harm from path', category_id: 'character', type: 'GOOD', emoji: '🧹' },
+    { id: 'good-to-animals', title: 'Kind to animals', category_id: 'character', type: 'GOOD', emoji: '🐾' },
+    { id: 'respected-elders', title: 'Respected elders', category_id: 'character', type: 'GOOD', emoji: '👴' },
+    { id: 'compassionate-youth', title: 'Compassionate to youth', category_id: 'character', type: 'GOOD', emoji: '👦' },
+    { id: 'controlled-tongue', title: 'Controlled tongue', category_id: 'character', type: 'GOOD', emoji: '👅' },
+    { id: 'suppressed-desires', title: 'Suppressed bad desires', category_id: 'character', type: 'GOOD', emoji: '🛡️' },
+    { id: 'showed-humility', title: 'Showed humility', category_id: 'character', type: 'GOOD', emoji: '🙇' },
+    { id: 'maintained-ties', title: 'Maintained family ties', category_id: 'character', type: 'GOOD', emoji: '🤝' },
+    { id: 'accepted-criticism', title: 'Accepted constructive criticism', category_id: 'character', type: 'GOOD', emoji: '📝' },
+    { id: 'gave-benefit-doubt', title: 'Gave benefit of doubt', category_id: 'character', type: 'GOOD', emoji: '🤔' },
     
-    // Character & Akhlaq - IMPROVE
+    // Character & Akhlaq - IMPROVE (Massively Expanded)
     { id: 'anger', title: 'Lost temper/anger', category_id: 'character', type: 'IMPROVE', emoji: '😤' },
     { id: 'pride', title: 'Pride/arrogance', category_id: 'character', type: 'IMPROVE', emoji: '🦚' },
     { id: 'impatience', title: 'Impatience', category_id: 'character', type: 'IMPROVE', emoji: '⏰' },
@@ -375,6 +423,20 @@ export const seedCatalog: Catalog = {
     { id: 'held-grudge', title: 'Held a grudge', category_id: 'character', type: 'IMPROVE', emoji: '😠' },
     { id: 'ungrateful', title: 'Felt ungrateful', category_id: 'character', type: 'IMPROVE', emoji: '😔' },
     { id: 'rude-behavior', title: 'Was rude to someone', category_id: 'character', type: 'IMPROVE', emoji: '😤' },
+    { id: 'broke-promise', title: 'Broke a promise', category_id: 'character', type: 'IMPROVE', emoji: '💔' },
+    { id: 'lied', title: 'Told a lie', category_id: 'character', type: 'IMPROVE', emoji: '🤥' },
+    { id: 'exaggerated', title: 'Exaggerated/embellished', category_id: 'character', type: 'IMPROVE', emoji: '📢' },
+    { id: 'mocked-someone', title: 'Mocked/ridiculed someone', category_id: 'character', type: 'IMPROVE', emoji: '😏' },
+    { id: 'suspicious-thoughts', title: 'Had suspicious thoughts', category_id: 'character', type: 'IMPROVE', emoji: '🤨' },
+    { id: 'eye-service', title: 'Showed off for people', category_id: 'character', type: 'IMPROVE', emoji: '👁️' },
+    { id: 'stared-inappropriately', title: 'Didn\'t lower gaze', category_id: 'character', type: 'IMPROVE', emoji: '👀' },
+    { id: 'wasted-speech', title: 'Wasted time in useless talk', category_id: 'character', type: 'IMPROVE', emoji: '💬' },
+    { id: 'didnt-fulfill-trust', title: 'Didn\'t fulfill trust', category_id: 'character', type: 'IMPROVE', emoji: '⚠️' },
+    { id: 'selfish-behavior', title: 'Acted selfishly', category_id: 'character', type: 'IMPROVE', emoji: '🤷' },
+    { id: 'passive-aggressive', title: 'Passive aggressive behavior', category_id: 'character', type: 'IMPROVE', emoji: '😒' },
+    { id: 'ignored-advice', title: 'Ignored good advice', category_id: 'character', type: 'IMPROVE', emoji: '🙅' },
+    { id: 'disrespected-elder', title: 'Disrespected elder', category_id: 'character', type: 'IMPROVE', emoji: '😤' },
+    { id: 'unkind-to-animals', title: 'Unkind to animals', category_id: 'character', type: 'IMPROVE', emoji: '🐾' },
     
     // Family & Relations - GOOD
     { id: 'family-time', title: 'Quality family time', category_id: 'family', type: 'GOOD', emoji: '👨‍👩‍👧‍👦' },
@@ -504,7 +566,69 @@ export const seedCatalog: Catalog = {
     { id: 'littered', title: 'Littered', category_id: 'environment', type: 'IMPROVE', emoji: '🗑️' },
     { id: 'excessive-consumption', title: 'Excessive consumption', category_id: 'environment', type: 'IMPROVE', emoji: '🛍️' },
     
-    // Severe Issues (require immediate tawbah)
+    // Finance & Wealth - GOOD (New Category)
+    { id: 'earned-halal', title: 'Earned through halal means', category_id: 'finance', type: 'GOOD', emoji: '✅' },
+    { id: 'refused-riba', title: 'Refused interest/riba', category_id: 'finance', type: 'GOOD', emoji: '🚫' },
+    { id: 'paid-debts', title: 'Paid off debts', category_id: 'finance', type: 'GOOD', emoji: '💳' },
+    { id: 'helped-debtor', title: 'Helped debtor', category_id: 'finance', type: 'GOOD', emoji: '💰' },
+    { id: 'honest-business', title: 'Honest in business dealings', category_id: 'finance', type: 'GOOD', emoji: '🤝' },
+    { id: 'fair-wages', title: 'Paid fair wages', category_id: 'finance', type: 'GOOD', emoji: '💵' },
+    { id: 'ethical-investment', title: 'Ethical halal investment', category_id: 'finance', type: 'GOOD', emoji: '📈' },
+    { id: 'contentment-wealth', title: 'Content with provisions', category_id: 'finance', type: 'GOOD', emoji: '😌' },
+    
+    // Finance & Wealth - IMPROVE (New Category)
+    { id: 'involved-riba', title: 'Involved in interest/riba', category_id: 'finance', type: 'IMPROVE', emoji: '⚠️' },
+    { id: 'haram-income', title: 'Doubtful income source', category_id: 'finance', type: 'IMPROVE', emoji: '⚠️' },
+    { id: 'delayed-debt-payment', title: 'Delayed debt payment', category_id: 'finance', type: 'IMPROVE', emoji: '💳' },
+    { id: 'dishonest-business', title: 'Dishonest business practice', category_id: 'finance', type: 'IMPROVE', emoji: '📉' },
+    { id: 'hoarded-wealth', title: 'Hoarded wealth', category_id: 'finance', type: 'IMPROVE', emoji: '💰' },
+    { id: 'excessive-materialism', title: 'Excessive materialism', category_id: 'finance', type: 'IMPROVE', emoji: '🛍️' },
+    { id: 'underpaid-worker', title: 'Underpaid worker', category_id: 'finance', type: 'IMPROVE', emoji: '💸' },
+    
+    // Seasonal & Special - GOOD (New Category)
+    { id: 'ramadan-fasting', title: 'Ramadan fasting', category_id: 'seasonal', type: 'GOOD', emoji: '🌙' },
+    { id: 'taraweeh-ramadan', title: 'Taraweeh in Ramadan', category_id: 'seasonal', type: 'GOOD', emoji: '🕌' },
+    { id: 'laylatul-qadr', title: 'Sought Laylatul Qadr', category_id: 'seasonal', type: 'GOOD', emoji: '✨' },
+    { id: 'eid-prayer-early', title: 'Early Eid preparation', category_id: 'seasonal', type: 'GOOD', emoji: '🎉' },
+    { id: 'eid-charity', title: 'Eid charity (Sadaqatul Fitr)', category_id: 'seasonal', type: 'GOOD', emoji: '💝' },
+    { id: 'hajj-preparation', title: 'Hajj/Umrah preparation', category_id: 'seasonal', type: 'GOOD', emoji: '🕋' },
+    { id: 'day-arafah-fast', title: 'Fasted Day of Arafah', category_id: 'seasonal', type: 'GOOD', emoji: '🌄' },
+    { id: 'ashura-fast', title: 'Fasted Day of Ashura', category_id: 'seasonal', type: 'GOOD', emoji: '📅' },
+    { id: 'muharram-good-deeds', title: 'Extra deeds in Muharram', category_id: 'seasonal', type: 'GOOD', emoji: '🌙' },
+    { id: 'dhul-hijjah-deeds', title: 'Extra deeds in Dhul Hijjah', category_id: 'seasonal', type: 'GOOD', emoji: '📿' },
+    { id: 'shaban-preparation', title: 'Prepared for Ramadan', category_id: 'seasonal', type: 'GOOD', emoji: '🌙' },
+    { id: 'monday-thursday-fast', title: 'Monday/Thursday fast', category_id: 'seasonal', type: 'GOOD', emoji: '📅' },
+    { id: 'white-days-fast', title: 'White days fast (13-15)', category_id: 'seasonal', type: 'GOOD', emoji: '🌕' },
+    { id: 'six-shawwal', title: 'Six fasts of Shawwal', category_id: 'seasonal', type: 'GOOD', emoji: '6️⃣' },
+    
+    // Seasonal & Special - IMPROVE (New Category)
+    { id: 'broke-ramadan-fast', title: 'Broke Ramadan fast without excuse', category_id: 'seasonal', type: 'IMPROVE', emoji: '❌' },
+    { id: 'missed-taraweeh', title: 'Missed Taraweeh opportunities', category_id: 'seasonal', type: 'IMPROVE', emoji: '🕌' },
+    { id: 'wasted-ramadan', title: 'Wasted Ramadan time', category_id: 'seasonal', type: 'IMPROVE', emoji: '⏰' },
+    { id: 'neglected-last-ten', title: 'Neglected last 10 nights', category_id: 'seasonal', type: 'IMPROVE', emoji: '🌙' },
+    { id: 'missed-eid-prayer', title: 'Missed Eid prayer', category_id: 'seasonal', type: 'IMPROVE', emoji: '❌' },
+    { id: 'forgot-eid-charity', title: 'Forgot Sadaqatul Fitr', category_id: 'seasonal', type: 'IMPROVE', emoji: '💸' },
+    
+    // Emotions & Mental Health - GOOD (New Category)
+    { id: 'managed-stress', title: 'Managed stress well', category_id: 'emotions', type: 'GOOD', emoji: '🧘' },
+    { id: 'positive-mindset', title: 'Maintained positive mindset', category_id: 'emotions', type: 'GOOD', emoji: '😊' },
+    { id: 'sought-help', title: 'Sought help when needed', category_id: 'emotions', type: 'GOOD', emoji: '🤝' },
+    { id: 'supported-struggling', title: 'Supported someone struggling', category_id: 'emotions', type: 'GOOD', emoji: '💚' },
+    { id: 'practiced-self-care', title: 'Practiced self-care', category_id: 'emotions', type: 'GOOD', emoji: '💆' },
+    { id: 'expressed-feelings', title: 'Expressed feelings healthily', category_id: 'emotions', type: 'GOOD', emoji: '💬' },
+    { id: 'took-break', title: 'Took necessary break', category_id: 'emotions', type: 'GOOD', emoji: '☕' },
+    { id: 'breathed-deeply', title: 'Practiced mindful breathing', category_id: 'emotions', type: 'GOOD', emoji: '🌬️' },
+    { id: 'trusted-allah-plan', title: 'Trusted Allah\'s plan', category_id: 'emotions', type: 'GOOD', emoji: '🤲' },
+    
+    // Emotions & Mental Health - IMPROVE (New Category)
+    { id: 'overwhelmed', title: 'Felt overwhelmed', category_id: 'emotions', type: 'IMPROVE', emoji: '😰' },
+    { id: 'anxious', title: 'Excessive anxiety', category_id: 'emotions', type: 'IMPROVE', emoji: '😟' },
+    { id: 'neglected-mental-health', title: 'Neglected mental health', category_id: 'emotions', type: 'IMPROVE', emoji: '🧠' },
+    { id: 'bottled-emotions', title: 'Bottled up emotions', category_id: 'emotions', type: 'IMPROVE', emoji: '🫙' },
+    { id: 'compared-others', title: 'Compared self to others', category_id: 'emotions', type: 'IMPROVE', emoji: '📊' },
+    { id: 'dwelled-on-past', title: 'Dwelled on past mistakes', category_id: 'emotions', type: 'IMPROVE', emoji: '⏪' },
+    { id: 'feared-future', title: 'Excessive fear of future', category_id: 'emotions', type: 'IMPROVE', emoji: '🔮' },
+    { id: 'isolated-self', title: 'Isolated self unnecessarily', category_id: 'emotions', type: 'IMPROVE', emoji: '🚪' },
     { id: 'major-sin', title: 'Major transgression', category_id: 'character', type: 'SEVERE', emoji: '⚠️' },
     { id: 'neglected-obligation', title: 'Neglected religious duty', category_id: 'prayer', type: 'SEVERE', emoji: '🚨' },
     { id: 'harmed-others', title: 'Caused harm to others', category_id: 'community', type: 'SEVERE', emoji: '💔' },
