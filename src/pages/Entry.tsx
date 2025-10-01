@@ -80,12 +80,12 @@ export default function Entry({ entries, onSave, onUpdate }: EntryPageProps) {
   const isPast = targetDate < format(new Date(), 'yyyy-MM-dd');
 
   return (
-    <div className="space-y-4 max-w-5xl mx-auto p-4 pb-20">
+    <div className="space-y-4 max-w-5xl mx-auto p-4 pb-32">
       {/* Date Selection */}
       <SpiritualCard variant="elevated">
         <SpiritualCardHeader>
           <SpiritualCardTitle className="flex items-center gap-2 text-base">
-            <FileText className="h-4 w-4" />
+            <FileText className="h-5 w-5" />
             {isToday ? 'Today\'s Journal' : isPast ? 'Past Journal' : 'Future Journal'}
           </SpiritualCardTitle>
         </SpiritualCardHeader>
@@ -97,12 +97,12 @@ export default function Entry({ entries, onSave, onUpdate }: EntryPageProps) {
               entries={entries}
             />
             <div className="flex items-center justify-between pt-3 border-t">
-              <h3 className="font-semibold">
+              <h3 className="font-semibold text-base">
                 {format(selectedDate, 'EEEE, MMMM d, yyyy')}
               </h3>
               {existingEntry && (
-                <Badge variant="outline" className="gap-1">
-                  <Check className="h-3 w-3" />
+                <Badge variant="outline" className="gap-1 text-sm px-2 py-1">
+                  <Check className="h-4 w-4" />
                   {existingEntry.status || 'complete'}
                 </Badge>
               )}
@@ -114,8 +114,8 @@ export default function Entry({ entries, onSave, onUpdate }: EntryPageProps) {
       {/* Daily Balance Sheet - Shown First */}
       <div className="space-y-2">
         <div className="flex items-center gap-2 px-1">
-          <Scale className="h-4 w-4 text-muted-foreground" />
-          <h2 className="text-sm font-medium text-muted-foreground">Spiritual Balance</h2>
+          <Scale className="h-5 w-5 text-muted-foreground" />
+          <h2 className="text-base font-medium text-muted-foreground">Spiritual Balance</h2>
         </div>
         <DailyLedger
           entry={existingEntry || null}

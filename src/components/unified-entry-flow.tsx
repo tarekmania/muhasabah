@@ -1,16 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { SpiritualCard, SpiritualCardHeader, SpiritualCardTitle, SpiritualCardContent } from '@/components/ui/spiritual-card';
 import { EnhancedItemChip } from '@/components/ui/enhanced-item-chip';
 import { SelectedTray } from '@/components/ui/selected-tray';
 import { QuantitySelector } from '@/components/reflection/quantity-selector';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, Sparkles, Heart } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Badge } from '@/components/ui/badge';
+import { Search, Sparkles, Heart, ChevronDown } from 'lucide-react';
 import { useCatalog } from '@/hooks/use-catalog';
 import { curated_duas, type Entry, type CatalogItem } from '@/types';
+import { cn } from '@/lib/utils';
 
 interface UnifiedEntryFlowProps {
   onSave: (entry: Partial<Entry>) => void;
@@ -36,7 +37,8 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
     updateItemUsage,
   } = useCatalog();
 
-  const [activeTab, setActiveTab] = useState('explore');
+  const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({});
+  const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [note, setNote] = useState(existingEntry?.good?.note || existingEntry?.improve?.note || '');
   const [dua, setDua] = useState(existingEntry?.dua || '');
@@ -153,7 +155,7 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
       severeSlip: severeItemIds.length > 0 ? {
         itemIds: severeItemIds,
         note: note || undefined,
-        tawbah: true, // Always true for severe items
+        tawbah: true,
         qty: selectedState.qty
       } : null,
       missedOpportunity: missedOpportunityItemIds.length > 0 ? {
@@ -197,153 +199,166 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto p-4 pb-32">
+    <div className="space-y-4">
       {/* Main Entry Interface */}
-      <SpiritualCard variant="peaceful">
-        <SpiritualCardContent className="p-0">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="explore" className="gap-2">
-                <Sparkles className="h-4 w-4" />
-                Explore
-              </TabsTrigger>
-              <TabsTrigger value="search" className="gap-2">
-                <Search className="h-4 w-4" />
-                Search
-              </TabsTrigger>
-            </TabsList>
-
-            {/* Explore Tab */}
-            <TabsContent value="explore" className="p-6 space-y-6">
-              <ScrollArea className="h-[500px]">
-                <Accordion type="multiple" className="w-full">
-                  {catalog.categories.map(category => {
-                    const categoryItems = catalog.items.filter(item => item.category_id === category.id);
-                    const goodCategoryItems = categoryItems.filter(item => item.type === 'GOOD');
-                    const improveCategoryItems = categoryItems.filter(item => item.type === 'IMPROVE');
-                    const severeCategoryItems = categoryItems.filter(item => item.type === 'SEVERE');
-                    const missedCategoryItems = categoryItems.filter(item => item.type === 'MISSED_OPPORTUNITY');
-                    
-                    return (
-                      <AccordionItem key={category.id} value={category.id}>
-                        <AccordionTrigger className="text-left">
-                          <div className="flex items-center gap-2">
-                            {category.emoji && <span>{category.emoji}</span>}
-                            <span>{category.title}</span>
-                            <span className="text-sm text-muted-foreground">
-                              ({categoryCounts[category.id] || 0})
-                            </span>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <div className="space-y-4 pt-2">
-                            {/* Good items */}
-                            {goodCategoryItems.length > 0 && (
-                              <div>
-                                <h4 className="text-sm font-medium mb-2 text-primary flex items-center gap-1">
-                                  <Heart className="h-3 w-3" />
-                                  Good deeds
-                                </h4>
-                                <div className="flex flex-wrap gap-2">
-                                  {goodCategoryItems.map(renderItemChip)}
-                                </div>
-                              </div>
-                            )}
-                            
-                            {/* Improve items */}
-                            {improveCategoryItems.length > 0 && (
-                              <div>
-                                <h4 className="text-sm font-medium mb-2 text-secondary-foreground flex items-center gap-1">
-                                  <Sparkles className="h-3 w-3" />
-                                  Areas to improve
-                                </h4>
-                                <div className="flex flex-wrap gap-2">
-                                  {improveCategoryItems.map(renderItemChip)}
-                                </div>
-                              </div>
-                            )}
-                            
-                            {/* Severe items */}
-                            {severeCategoryItems.length > 0 && (
-                              <div>
-                                <h4 className="text-sm font-medium mb-2 text-destructive flex items-center gap-1">
-                                  <span className="text-lg">⚠️</span>
-                                  Serious matters (Tawbah)
-                                </h4>
-                                <div className="flex flex-wrap gap-2">
-                                  {severeCategoryItems.map(renderItemChip)}
-                                </div>
-                              </div>
-                            )}
-                            
-                            {/* Missed opportunities */}
-                            {missedCategoryItems.length > 0 && (
-                              <div>
-                                <h4 className="text-sm font-medium mb-2 text-muted-foreground flex items-center gap-1">
-                                  <span className="text-lg">💭</span>
-                                  Missed opportunities
-                                </h4>
-                                <div className="flex flex-wrap gap-2">
-                                  {missedCategoryItems.map(renderItemChip)}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    );
-                  })}
-                </Accordion>
-              </ScrollArea>
-            </TabsContent>
-
-            {/* Search Tab */}
-            <TabsContent value="search" className="p-6 space-y-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <input
-                  placeholder="Search deeds and actions..."
+      <SpiritualCard variant="elevated">
+        <SpiritualCardHeader>
+          <SpiritualCardTitle className="flex items-center gap-2 text-base">
+            <Sparkles className="h-5 w-5" />
+            Select Items
+          </SpiritualCardTitle>
+        </SpiritualCardHeader>
+        <SpiritualCardContent className="space-y-4">
+          {/* Search Section */}
+          <Collapsible open={showSearch} onOpenChange={setShowSearch}>
+            <CollapsibleTrigger asChild>
+              <Button variant="outline" className="w-full justify-between h-14 text-base">
+                <div className="flex items-center gap-3">
+                  <Search className="h-5 w-5" />
+                  <span>Search Items</span>
+                </div>
+                <ChevronDown className={cn("h-5 w-5 transition-transform", showSearch && "rotate-180")} />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pt-3">
+              <div className="space-y-3">
+                <Input
+                  placeholder="Search items..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-input bg-background rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="h-12 text-base"
+                  autoFocus
                 />
+                {searchQuery && (
+                  <div className="space-y-3">
+                    {searchResults.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {searchResults.map((item) => renderItemChip(item))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-6">
+                        No items found for "{searchQuery}"
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
-              
-              <ScrollArea className="h-[400px]">
-                <div className="space-y-4">
-                  {searchResults.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {searchResults.map(renderItemChip)}
-                    </div>
-                  ) : searchQuery ? (
-                    <div className="text-center text-muted-foreground py-8">
-                      No items found for "{searchQuery}"
-                    </div>
-                  ) : (
-                    <div className="text-center text-muted-foreground py-8">
-                      Type to search for deeds and actions
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
-            </TabsContent>
+            </CollapsibleContent>
+          </Collapsible>
 
-          </Tabs>
+          {/* Categories */}
+          <div className="space-y-3">
+            {catalog.categories.map((category) => {
+              const categoryItems = catalog.items.filter(item => item.category_id === category.id);
+              const goodCategoryItems = categoryItems.filter(item => item.type === 'GOOD');
+              const improveCategoryItems = categoryItems.filter(item => item.type === 'IMPROVE');
+              const severeCategoryItems = categoryItems.filter(item => item.type === 'SEVERE');
+              const missedCategoryItems = categoryItems.filter(item => item.type === 'MISSED_OPPORTUNITY');
+              const isOpen = openCategories[category.id];
+              
+              return (
+                <Collapsible
+                  key={category.id}
+                  open={isOpen}
+                  onOpenChange={(open) => setOpenCategories(prev => ({ ...prev, [category.id]: open }))}
+                >
+                  <CollapsibleTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-between h-auto min-h-[3.5rem] py-3 text-base"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">{category.emoji}</span>
+                        <div className="text-left">
+                          <div className="font-medium">{category.title}</div>
+                          {category.description && (
+                            <div className="text-xs text-muted-foreground font-normal mt-0.5">
+                              {category.description}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-sm px-2">
+                          {categoryItems.length}
+                        </Badge>
+                        <ChevronDown className={cn("h-5 w-5 transition-transform", isOpen && "rotate-180")} />
+                      </div>
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-3">
+                    <div className="space-y-4 px-1">
+                      {/* Good items */}
+                      {goodCategoryItems.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-medium mb-2 text-primary flex items-center gap-1">
+                            <Heart className="h-4 w-4" />
+                            Good deeds
+                          </h4>
+                          <div className="flex flex-wrap gap-2">
+                            {goodCategoryItems.map(renderItemChip)}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Improve items */}
+                      {improveCategoryItems.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-medium mb-2 text-secondary-foreground flex items-center gap-1">
+                            <Sparkles className="h-4 w-4" />
+                            Areas to improve
+                          </h4>
+                          <div className="flex flex-wrap gap-2">
+                            {improveCategoryItems.map(renderItemChip)}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Severe items */}
+                      {severeCategoryItems.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-medium mb-2 text-destructive flex items-center gap-1">
+                            <span className="text-lg">⚠️</span>
+                            Serious matters (Tawbah)
+                          </h4>
+                          <div className="flex flex-wrap gap-2">
+                            {severeCategoryItems.map(renderItemChip)}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Missed opportunities */}
+                      {missedCategoryItems.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-medium mb-2 text-muted-foreground flex items-center gap-1">
+                            <span className="text-lg">💭</span>
+                            Missed opportunities
+                          </h4>
+                          <div className="flex flex-wrap gap-2">
+                            {missedCategoryItems.map(renderItemChip)}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              );
+            })}
+          </div>
         </SpiritualCardContent>
       </SpiritualCard>
 
-      {/* Note Section */}
-      <SpiritualCard variant="default">
+      {/* General Reflection */}
+      <SpiritualCard variant="elevated">
         <SpiritualCardHeader>
-          <SpiritualCardTitle>General Reflection Note</SpiritualCardTitle>
+          <SpiritualCardTitle className="text-base">General Reflection</SpiritualCardTitle>
         </SpiritualCardHeader>
         <SpiritualCardContent>
           <Textarea
-            placeholder="Any additional thoughts or reflections..."
+            placeholder="Write your thoughts, lessons learned, or any reflections from today..."
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            className="resize-none"
-            rows={3}
+            className="min-h-[150px] resize-none text-base"
           />
         </SpiritualCardContent>
       </SpiritualCard>

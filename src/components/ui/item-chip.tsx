@@ -4,24 +4,24 @@ import { cn } from "@/lib/utils";
 import { Check, Plus } from "lucide-react";
 
 const itemChipVariants = cva(
-  "inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition-all duration-300 cursor-pointer border-2 relative",
+  "inline-flex items-center gap-2 rounded-full px-4 py-3 text-base font-medium transition-all duration-300 cursor-pointer border-2 relative min-h-[44px]",
   {
     variants: {
       variant: {
-        good: "border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 hover:border-primary/30 hover:shadow-gentle",
-        improve: "border-secondary/30 bg-secondary/10 text-secondary-foreground hover:bg-secondary/20 hover:border-secondary/40 hover:shadow-warm",
-        severe: "border-red-300 bg-red-50 text-red-700 hover:bg-red-100 hover:border-red-400 dark:bg-red-950/20 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-950/30",
-        missed_opportunity: "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:border-amber-400 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-800 dark:hover:bg-amber-950/30",
-        neutral: "border-muted-foreground/20 bg-muted/5 text-muted-foreground hover:bg-muted/10",
+        good: "border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 hover:border-primary/30 hover:shadow-gentle active:scale-95",
+        improve: "border-secondary/30 bg-secondary/10 text-secondary-foreground hover:bg-secondary/20 hover:border-secondary/40 hover:shadow-warm active:scale-95",
+        severe: "border-red-300 bg-red-50 text-red-700 hover:bg-red-100 hover:border-red-400 dark:bg-red-950/20 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-950/30 active:scale-95",
+        missed_opportunity: "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:border-amber-400 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-800 dark:hover:bg-amber-950/30 active:scale-95",
+        neutral: "border-muted-foreground/20 bg-muted/5 text-muted-foreground hover:bg-muted/10 active:scale-95",
       },
       selected: {
         true: "",
         false: "",
       },
       size: {
-        sm: "px-2 py-1 text-xs",
-        default: "px-3 py-2 text-sm",
-        lg: "px-4 py-3 text-base",
+        sm: "px-3 py-2 text-sm min-h-[36px]",
+        default: "px-4 py-3 text-base min-h-[44px]",
+        lg: "px-5 py-4 text-lg min-h-[52px]",
       },
     },
     compoundVariants: [
@@ -151,28 +151,28 @@ const ItemChip = React.forwardRef<HTMLDivElement, ItemChipProps>(
         onMouseLeave={handleMouseLeave}
         {...props}
       >
-        {emoji && <span className="text-base">{emoji}</span>}
+        {emoji && <span className="text-xl">{emoji}</span>}
         <span className="flex-1">{label}</span>
         
         {/* Usage count badge */}
         {usageCount && usageCount > 0 && (
-          <span className="text-xs px-1.5 py-0.5 rounded-full bg-background/20 text-current">
+          <span className="text-xs px-2 py-1 rounded-full bg-background/20 text-current">
             ×{usageCount}
           </span>
         )}
         
         {/* Quantity indicator for selected items */}
         {selected && quantity && quantity > 1 && (
-          <span className="text-xs px-1.5 py-0.5 rounded-full bg-background/30 text-current font-bold">
+          <span className="text-sm px-2 py-1 rounded-full bg-background/30 text-current font-bold">
             {quantity}
           </span>
         )}
         
         {/* Selection indicator */}
         {selected ? (
-          <Check className="h-4 w-4" />
+          <Check className="h-5 w-5" />
         ) : showAdd ? (
-          <Plus className="h-4 w-4 opacity-60" />
+          <Plus className="h-5 w-5 opacity-60" />
         ) : null}
       </div>
     );

@@ -45,35 +45,35 @@ export function SelectedTray({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t shadow-lg">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t shadow-lg pb-safe">
       <Card className="rounded-none border-0 border-t">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 pt-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg flex items-center gap-2">
               <span>Selected</span>
-              <Badge variant="secondary">{selectedItems.length}</Badge>
+              <Badge variant="secondary" className="text-base px-2">{selectedItems.length}</Badge>
             </CardTitle>
             <Button
               variant="ghost"
               size="sm"
               onClick={onClear}
-              className="text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground h-10 w-10"
             >
-              <X className="h-4 w-4" />
+              <X className="h-5 w-5" />
             </Button>
           </div>
         </CardHeader>
         
-        <CardContent className="pt-0">
+        <CardContent className="pt-0 pb-4">
           {/* Selected Items List */}
-          <div className="space-y-3 max-h-32 overflow-y-auto mb-4">
+          <div className="space-y-3 max-h-40 overflow-y-auto mb-4">
             {selectedItems.map((item) => {
               const count = selectedState.qty[item.id] || 0;
               return (
-                <div key={item.id} className="flex items-center justify-between bg-muted/50 rounded-lg p-3">
+                <div key={item.id} className="flex items-center justify-between bg-muted/50 rounded-lg p-3 min-h-[56px]">
                   <div className="flex items-center gap-2 flex-1">
-                    <span className="text-lg">{item.emoji}</span>
-                    <span className="font-medium text-sm">{item.title}</span>
+                    <span className="text-xl">{item.emoji}</span>
+                    <span className="font-medium text-base">{item.title}</span>
                     {item.suggested_counts && item.suggested_counts.length > 0 && (
                       <div className="flex gap-1">
                         {item.suggested_counts.slice(0, 2).map((suggestedCount) => (
@@ -82,7 +82,7 @@ export function SelectedTray({
                             variant="outline"
                             size="sm"
                             onClick={() => handleQuickAdd(item.id, suggestedCount)}
-                            className="h-6 px-2 text-xs"
+                            className="h-8 px-3 text-sm min-w-[44px]"
                           >
                             +{suggestedCount}
                           </Button>
@@ -98,20 +98,20 @@ export function SelectedTray({
                         variant="outline"
                         size="sm"
                         onClick={() => handleCountChange(item.id, count - 1)}
-                        className="h-8 w-8 p-0"
+                        className="h-10 w-10 p-0 text-lg"
                       >
                         -
                       </Button>
-                      <span className="font-bold text-lg min-w-[2rem] text-center">
+                      <span className="font-bold text-xl min-w-[2.5rem] text-center">
                         {count}
                       </span>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleCountChange(item.id, count + 1)}
-                        className="h-8 w-8 p-0"
+                        className="h-10 w-10 p-0"
                       >
-                        <Plus className="h-4 w-4" />
+                        <Plus className="h-5 w-5" />
                       </Button>
                     </div>
                     
@@ -120,9 +120,9 @@ export function SelectedTray({
                       variant="ghost"
                       size="sm"
                       onClick={() => onRemoveItem(item.id)}
-                      className="h-8 w-8 p-0 text-muted-foreground hover:text-red-600"
+                      className="h-10 w-10 p-0 text-muted-foreground hover:text-red-600"
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-5 w-5" />
                     </Button>
                   </div>
                 </div>
@@ -133,14 +133,14 @@ export function SelectedTray({
           <Separator className="my-4" />
 
           {/* Summary and Action */}
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-muted-foreground">
-              <span className="font-medium">{totalCount}</span> total deeds selected
+          <div className="flex items-center justify-between gap-4">
+            <div className="text-base text-muted-foreground">
+              <span className="font-medium">{totalCount}</span> total deeds
             </div>
             
             <Button 
               onClick={onSaveToday}
-              className="bg-green-600 hover:bg-green-700 text-white font-medium px-6"
+              className="bg-green-600 hover:bg-green-700 text-white font-medium px-6 h-12 text-base"
               disabled={selectedItems.length === 0}
             >
               Add {totalCount} to Today
