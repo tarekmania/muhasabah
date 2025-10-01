@@ -4,9 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Shield, Bell, Trash2, Moon, AlertTriangle } from 'lucide-react';
+import { Shield, Bell, Trash2, AlertTriangle, Download, Upload, Database } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { type Settings } from '@/types';
+import { exportData, importData, getDBStats } from '@/lib/db';
+import { Filesystem, Directory } from '@capacitor/filesystem';
 
 interface SettingsViewProps {
   settings: Settings;
@@ -20,7 +22,19 @@ export function SettingsView({ settings, onUpdateSettings, onPanicDelete }: Sett
     minute: settings.reminderMinute
   });
   const [showPanicConfirm, setShowPanicConfirm] = useState(false);
+  const [dbStats, setDbStats] = useState<{ totalEntries: number; oldestEntry?: string; newestEntry?: string } | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
   const { toast } = useToast();
+
+  // Load database statistics
+  React.useEffect(() => {
+    const loadStats = async () => {
+      const stats = await getDBStats();
+      setDbStats(stats);
+    };
+    loadStats();
+  }, []);
 
   const handleTimeChange = (field: 'hour' | 'minute', value: string) => {
     const numValue = parseInt(value, 10);
@@ -52,6 +66,98 @@ export function SettingsView({ settings, onUpdateSettings, onPanicDelete }: Sett
       description: "Your privacy is protected.",
       variant: "destructive"
     });
+  };
+
+  const handleExportData = async () => {
+    try {
+      setIsExporting(true);
+      const jsonData = await exportData();
+      const fileName = `muhasabah-backup-${new Date().toISOString().split('T')[0]}.json`;
+
+      // For Capacitor/Android, save to Downloads
+      try {
+        await Filesystem.writeFile({
+          path: fileName,
+          data: jsonData,
+          directory: Directory.Documents,
+        });
+        
+        toast({
+          title: "Backup created",
+          description: `File saved to Documents: ${fileName}`,
+        });
+      } catch (fsError) {
+        // Fallback to browser download
+        const blob = new Blob([jsonData], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        toast({
+          title: "Backup downloaded",
+          description: fileName,
+        });
+      }
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast({
+        title: "Export failed",
+        description: "Could not create backup file",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleImportData = async () => {
+    try {
+      setIsImporting(true);
+      
+      // Create file input
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      
+      input.onchange = async (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (!file) return;
+        
+        const text = await file.text();
+        const result = await importData(text);
+        
+        if (result.success) {
+          toast({
+            title: "Import successful",
+            description: result.message,
+          });
+          // Reload the page to reflect imported data
+          window.location.reload();
+        } else {
+          toast({
+            title: "Import failed",
+            description: result.message,
+            variant: "destructive"
+          });
+        }
+        setIsImporting(false);
+      };
+      
+      input.click();
+    } catch (error) {
+      console.error('Import failed:', error);
+      toast({
+        title: "Import failed",
+        description: "Could not read backup file",
+        variant: "destructive"
+      });
+      setIsImporting(false);
+    }
   };
 
   return (
@@ -144,6 +250,66 @@ export function SettingsView({ settings, onUpdateSettings, onPanicDelete }: Sett
         </SpiritualCardContent>
       </SpiritualCard>
 
+      {/* Data Management */}
+      <SpiritualCard variant="peaceful">
+        <SpiritualCardHeader>
+          <div className="flex items-center gap-2">
+            <Database className="h-5 w-5 text-primary" />
+            <SpiritualCardTitle>Data Management</SpiritualCardTitle>
+          </div>
+        </SpiritualCardHeader>
+        <SpiritualCardContent>
+          <div className="space-y-4">
+            {dbStats && (
+              <div className="bg-muted/30 rounded-lg p-4 space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Total Entries:</span>
+                  <span className="font-semibold">{dbStats.totalEntries}</span>
+                </div>
+                {dbStats.oldestEntry && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">First Entry:</span>
+                    <span className="font-medium">{new Date(dbStats.oldestEntry).toLocaleDateString()}</span>
+                  </div>
+                )}
+                {dbStats.newestEntry && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Latest Entry:</span>
+                    <span className="font-medium">{new Date(dbStats.newestEntry).toLocaleDateString()}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Button
+                variant="outline"
+                onClick={handleExportData}
+                disabled={isExporting}
+                className="w-full"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                {isExporting ? 'Exporting...' : 'Export Backup'}
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={handleImportData}
+                disabled={isImporting}
+                className="w-full"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                {isImporting ? 'Importing...' : 'Import Backup'}
+              </Button>
+            </div>
+
+            <p className="text-xs text-muted-foreground text-center">
+              All data is stored locally on your device using IndexedDB
+            </p>
+          </div>
+        </SpiritualCardContent>
+      </SpiritualCard>
+
       {/* Emergency */}
       <SpiritualCard variant="default" className="border-destructive/20">
         <SpiritualCardHeader>
@@ -186,7 +352,7 @@ export function SettingsView({ settings, onUpdateSettings, onPanicDelete }: Sett
               "And it is He who created the heavens and earth in truth. And the day He says, 'Be,' and it is, His word is the truth." - Qur'an 6:73
             </p>
             <p className="text-xs text-muted-foreground">
-              Version 1.0.0 • Privacy-first • Local storage only
+              Version 1.0.0 • Offline-first • IndexedDB storage • Capacitor ready
             </p>
           </div>
         </SpiritualCardContent>

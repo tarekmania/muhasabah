@@ -1,139 +1,199 @@
 import { useState, useEffect } from 'react';
 import { type Entry, type Settings } from '@/types';
-
-// Simple localStorage wrapper for MVP - will be replaced with encrypted storage
-const STORAGE_KEYS = {
-  ENTRIES: 'muhasabah_entries',
-  SETTINGS: 'muhasabah_settings',
-} as const;
+import { 
+  getDB, 
+  getAllEntries, 
+  saveEntry as saveEntryToDB, 
+  updateEntry as updateEntryInDB,
+  saveSettings as saveSettingsToDB,
+  getSettings as getSettingsFromDB,
+  clearAllData as clearAllDataFromDB,
+  checkDBHealth
+} from '@/lib/db';
 
 const defaultSettings: Settings = {
-  reminderHour: 21, // 9 PM
+  reminderHour: 21,
   reminderMinute: 0,
   biometricLock: false,
-  privateMode: true, // Default to privacy-first
+  privateMode: false,
 };
 
 export function useStorage() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [settings, setSettings] = useState<Settings>(defaultSettings);
   const [isLoading, setIsLoading] = useState(true);
+  const [dbHealthy, setDbHealthy] = useState(true);
 
-  // Load data on mount
+  // Initialize database and load data
   useEffect(() => {
-    try {
-      const savedEntries = localStorage.getItem(STORAGE_KEYS.ENTRIES);
-      const savedSettings = localStorage.getItem(STORAGE_KEYS.SETTINGS);
+    const initDB = async () => {
+      try {
+        console.log('Initializing IndexedDB...');
+        
+        // Check database health
+        const healthy = await checkDBHealth();
+        setDbHealthy(healthy);
+        
+        if (!healthy) {
+          console.error('Database health check failed');
+          setIsLoading(false);
+          return;
+        }
 
-      if (savedEntries) {
-        setEntries(JSON.parse(savedEntries));
+        // Load entries
+        const loadedEntries = await getAllEntries();
+        console.log(`Loaded ${loadedEntries.length} entries from IndexedDB`);
+        setEntries(loadedEntries.sort((a, b) => b.dateISO.localeCompare(a.dateISO)));
+
+        // Load settings
+        const loadedSettings = await getSettingsFromDB();
+        if (loadedSettings) {
+          console.log('Loaded settings from IndexedDB');
+          setSettings(loadedSettings);
+        } else {
+          // Save default settings if none exist
+          await saveSettingsToDB(defaultSettings);
+          console.log('Saved default settings to IndexedDB');
+        }
+
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Failed to initialize database:', error);
+        setDbHealthy(false);
+        setIsLoading(false);
       }
-      
-      if (savedSettings) {
-        setSettings({ ...defaultSettings, ...JSON.parse(savedSettings) });
-      }
-    } catch (error) {
-      console.error('Failed to load data from storage:', error);
-    } finally {
-      setIsLoading(false);
-    }
+    };
+
+    initDB();
   }, []);
 
-  const saveEntry = (entryData: Partial<Entry>) => {
-    const today = new Date().toISOString().split('T')[0];
-    const existingIndex = entries.findIndex(e => e.dateISO === today);
-    
-    let updatedEntries: Entry[];
-    
-    if (existingIndex >= 0) {
-      // Update existing entry by merging data
-      updatedEntries = [...entries];
-      const existing = updatedEntries[existingIndex];
-      
-      updatedEntries[existingIndex] = {
-        ...existing,
-        id: existing.id,
-        dateISO: today,
-        // Merge good data - combine itemIds and merge quantities
-        good: entryData.good ? {
-          itemIds: [...(existing.good?.itemIds || []), ...entryData.good.itemIds].filter((id, index, arr) => arr.indexOf(id) === index),
-          note: entryData.good.note || existing.good?.note,
-          qty: { ...(existing.good?.qty || {}), ...(entryData.good.qty || {}) }
-        } : existing.good,
-        // Merge improve data  
-        improve: entryData.improve ? {
-          itemIds: [...(existing.improve?.itemIds || []), ...entryData.improve.itemIds].filter((id, index, arr) => arr.indexOf(id) === index),
-          note: entryData.improve.note || existing.improve?.note,
-          qty: { ...(existing.improve?.qty || {}), ...(entryData.improve.qty || {}) }
-        } : existing.improve,
-        // Merge severe slip data
-        severeSlip: entryData.severeSlip ? {
-          itemIds: [...(existing.severeSlip?.itemIds || []), ...entryData.severeSlip.itemIds].filter((id, index, arr) => arr.indexOf(id) === index),
-          note: entryData.severeSlip.note || existing.severeSlip?.note,
-          tawbah: entryData.severeSlip.tawbah || existing.severeSlip?.tawbah || false,
-          qty: { ...(existing.severeSlip?.qty || {}), ...(entryData.severeSlip.qty || {}) }
-        } : existing.severeSlip,
-        // Merge missed opportunity data
-        missedOpportunity: entryData.missedOpportunity ? {
-          itemIds: [...(existing.missedOpportunity?.itemIds || []), ...entryData.missedOpportunity.itemIds].filter((id, index, arr) => arr.indexOf(id) === index),
-          note: entryData.missedOpportunity.note || existing.missedOpportunity?.note,
-          intention: entryData.missedOpportunity.intention || existing.missedOpportunity?.intention,
-          qty: { ...(existing.missedOpportunity?.qty || {}), ...(entryData.missedOpportunity.qty || {}) }
-        } : existing.missedOpportunity,
-        // Update dua
-        dua: entryData.dua !== undefined ? entryData.dua : existing.dua,
-        // Update privacy level
-        privacy_level: entryData.privacy_level || existing.privacy_level,
-      };
-    } else {
-      // Create new entry
-      const newEntry: Entry = {
-        id: `entry_${Date.now()}`,
-        dateISO: today,
-        good: entryData.good || null,
-        improve: entryData.improve || null,
-        severeSlip: entryData.severeSlip || null,
-        missedOpportunity: entryData.missedOpportunity || null,
-        dua: entryData.dua,
-        privacy_level: entryData.privacy_level || 'normal',
-      };
-      updatedEntries = [newEntry, ...entries];
+  /**
+   * Save a new entry or merge with existing entry for today
+   */
+  const saveEntry = async (entryData: Partial<Entry>) => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const existingEntry = entries.find(e => e.dateISO === today);
+
+      let newEntry: Entry;
+
+      if (existingEntry) {
+        // Merge with existing entry
+        newEntry = {
+          ...existingEntry,
+          ...entryData,
+          good: entryData.good || existingEntry.good,
+          improve: entryData.improve || existingEntry.improve,
+          severeSlip: entryData.severeSlip || existingEntry.severeSlip,
+          missedOpportunity: entryData.missedOpportunity || existingEntry.missedOpportunity,
+          dua: entryData.dua || existingEntry.dua,
+        };
+      } else {
+        // Create new entry
+        newEntry = {
+          id: `entry-${Date.now()}`,
+          dateISO: today,
+          good: entryData.good || null,
+          improve: entryData.improve || null,
+          severeSlip: entryData.severeSlip || null,
+          missedOpportunity: entryData.missedOpportunity || null,
+          dua: entryData.dua,
+          privacy_level: entryData.privacy_level || 'normal',
+        };
+      }
+
+      // Save to IndexedDB
+      await saveEntryToDB(newEntry);
+
+      // Update local state
+      setEntries(prev => {
+        const filtered = prev.filter(e => e.id !== newEntry.id);
+        return [newEntry, ...filtered].sort((a, b) => b.dateISO.localeCompare(a.dateISO));
+      });
+
+      console.log('Entry saved successfully');
+    } catch (error) {
+      console.error('Failed to save entry:', error);
+      throw error;
     }
-
-    setEntries(updatedEntries);
-    localStorage.setItem(STORAGE_KEYS.ENTRIES, JSON.stringify(updatedEntries));
   };
 
-  const updateEntry = (updatedEntry: Entry) => {
-    const updatedEntries = entries.map(entry =>
-      entry.id === updatedEntry.id ? updatedEntry : entry
-    );
-    setEntries(updatedEntries);
-    localStorage.setItem(STORAGE_KEYS.ENTRIES, JSON.stringify(updatedEntries));
+  /**
+   * Update an existing entry
+   */
+  const updateEntry = async (updatedEntry: Entry) => {
+    try {
+      // Update in IndexedDB
+      await updateEntryInDB(updatedEntry);
+
+      // Update local state
+      setEntries(prev =>
+        prev.map(e => (e.id === updatedEntry.id ? updatedEntry : e))
+          .sort((a, b) => b.dateISO.localeCompare(a.dateISO))
+      );
+
+      console.log('Entry updated successfully');
+    } catch (error) {
+      console.error('Failed to update entry:', error);
+      throw error;
+    }
   };
 
-  const updateSettings = (newSettings: Partial<Settings>) => {
-    const updatedSettings = { ...settings, ...newSettings };
-    setSettings(updatedSettings);
-    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(updatedSettings));
+  /**
+   * Update settings
+   */
+  const updateSettings = async (newSettings: Partial<Settings>) => {
+    try {
+      const updatedSettings = { ...settings, ...newSettings };
+      
+      // Save to IndexedDB
+      await saveSettingsToDB(updatedSettings);
+      
+      // Update local state
+      setSettings(updatedSettings);
+
+      console.log('Settings updated successfully');
+    } catch (error) {
+      console.error('Failed to update settings:', error);
+      throw error;
+    }
   };
 
-  const clearAllData = () => {
-    setEntries([]);
-    setSettings(defaultSettings);
-    localStorage.removeItem(STORAGE_KEYS.ENTRIES);
-    localStorage.removeItem(STORAGE_KEYS.SETTINGS);
+  /**
+   * Clear all data (panic delete)
+   */
+  const clearAllData = async () => {
+    try {
+      // Clear IndexedDB
+      await clearAllDataFromDB();
+
+      // Reset local state
+      setEntries([]);
+      setSettings(defaultSettings);
+
+      // Save default settings
+      await saveSettingsToDB(defaultSettings);
+
+      console.log('All data cleared successfully');
+    } catch (error) {
+      console.error('Failed to clear data:', error);
+      throw error;
+    }
   };
 
+  /**
+   * Get today's entry
+   */
   const getTodayEntry = (): Entry | null => {
     const today = new Date().toISOString().split('T')[0];
-    return entries.find(entry => entry.dateISO === today) || null;
+    return entries.find(e => e.dateISO === today) || null;
   };
 
   return {
     entries,
     settings,
     isLoading,
+    dbHealthy,
     saveEntry,
     updateEntry,
     updateSettings,
