@@ -88,9 +88,12 @@ export type DailyLedger = {
   }>;
 };
 
+export type EntryStatus = 'draft' | 'complete' | 'reviewed';
+
 export type Entry = {
   id: string;
   dateISO: string;
+  status?: EntryStatus;
   good: { tagIds?: string[]; itemIds?: string[]; note?: string; qty?: Record<string, number> } | null;
   improve: { tagIds?: string[]; itemIds?: string[]; note?: string; tawbah?: boolean; qty?: Record<string, number> } | null;
   severeSlip?: { itemIds: string[]; note?: string; tawbah: boolean; guidance?: string; qty?: Record<string, number> } | null;

@@ -1,77 +1,96 @@
 import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Settings, History, Calendar, Sparkles, BookOpen, TrendingUp } from 'lucide-react';
+import { Settings, History, LayoutDashboard, Edit3, Sparkles, BookOpen, TrendingUp } from 'lucide-react';
 
-interface AppHeaderProps {
-  currentView: 'today' | 'templates' | 'ledger' | 'weekly' | 'history' | 'settings';
-  onViewChange: (view: 'today' | 'templates' | 'ledger' | 'weekly' | 'history' | 'settings') => void;
-}
+export function AppHeader() {
+  const location = useLocation();
+  
+  const isActive = (path: string) => {
+    if (path === '/') return location.pathname === '/';
+    return location.pathname.startsWith(path);
+  };
 
-export function AppHeader({ currentView, onViewChange }: AppHeaderProps) {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center space-x-2">
+        <Link to="/" className="flex items-center space-x-2">
           <div className="h-8 w-8 rounded-full bg-gradient-spiritual flex items-center justify-center">
             <span className="text-sm font-bold text-primary-foreground">م</span>
           </div>
           <h1 className="text-xl font-bold bg-gradient-spiritual bg-clip-text text-transparent">
             Muhāsabah
           </h1>
-        </div>
+        </Link>
         
         <nav className="flex items-center space-x-1">
           <Button
-            variant={currentView === 'today' ? 'default' : 'ghost'}
+            variant={isActive('/') ? 'default' : 'ghost'}
             size="sm"
-            onClick={() => onViewChange('today')}
-            className={currentView === 'today' ? 'bg-primary text-primary-foreground' : ''}
+            asChild
           >
-            <Calendar className="h-4 w-4 mr-1" />
-            Today
+            <Link to="/">
+              <LayoutDashboard className="h-4 w-4 mr-1" />
+              Dashboard
+            </Link>
           </Button>
           <Button
-            variant={currentView === 'templates' ? 'default' : 'ghost'}
+            variant={isActive('/entry') ? 'default' : 'ghost'}
             size="sm"
-            onClick={() => onViewChange('templates')}
-            className={currentView === 'templates' ? 'bg-primary text-primary-foreground' : ''}
+            asChild
           >
-            <Sparkles className="h-4 w-4 mr-1" />
-            Quick Start
+            <Link to="/entry">
+              <Edit3 className="h-4 w-4 mr-1" />
+              Entry
+            </Link>
           </Button>
           <Button
-            variant={currentView === 'ledger' ? 'default' : 'ghost'}
+            variant={isActive('/templates') ? 'default' : 'ghost'}
             size="sm"
-            onClick={() => onViewChange('ledger')}
-            className={currentView === 'ledger' ? 'bg-primary text-primary-foreground' : ''}
+            asChild
           >
-            <BookOpen className="h-4 w-4 mr-1" />
-            Ledger
+            <Link to="/templates">
+              <Sparkles className="h-4 w-4 mr-1" />
+              Routines
+            </Link>
           </Button>
           <Button
-            variant={currentView === 'weekly' ? 'default' : 'ghost'}
+            variant={isActive('/ledger') ? 'default' : 'ghost'}
             size="sm"
-            onClick={() => onViewChange('weekly')}
-            className={currentView === 'weekly' ? 'bg-primary text-primary-foreground' : ''}
+            asChild
           >
-            <TrendingUp className="h-4 w-4 mr-1" />
-            Weekly
+            <Link to="/ledger">
+              <BookOpen className="h-4 w-4 mr-1" />
+              Ledger
+            </Link>
           </Button>
           <Button
-            variant={currentView === 'history' ? 'default' : 'ghost'}
+            variant={isActive('/weekly') ? 'default' : 'ghost'}
             size="sm"
-            onClick={() => onViewChange('history')}
-            className={currentView === 'history' ? 'bg-primary text-primary-foreground' : ''}
+            asChild
           >
-            <History className="h-4 w-4" />
+            <Link to="/weekly">
+              <TrendingUp className="h-4 w-4 mr-1" />
+              Weekly
+            </Link>
           </Button>
           <Button
-            variant={currentView === 'settings' ? 'default' : 'ghost'}
+            variant={isActive('/history') ? 'default' : 'ghost'}
             size="sm"
-            onClick={() => onViewChange('settings')}
-            className={currentView === 'settings' ? 'bg-primary text-primary-foreground' : ''}
+            asChild
           >
-            <Settings className="h-4 w-4" />
+            <Link to="/history">
+              <History className="h-4 w-4" />
+            </Link>
+          </Button>
+          <Button
+            variant={isActive('/settings') ? 'default' : 'ghost'}
+            size="sm"
+            asChild
+          >
+            <Link to="/settings">
+              <Settings className="h-4 w-4" />
+            </Link>
           </Button>
         </nav>
       </div>
