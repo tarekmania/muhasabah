@@ -1,0 +1,5 @@
+[functions.analyze-reflection]
+verify_jwt = false
+
+[functions.pattern-recognition]
+verify_jwt = false

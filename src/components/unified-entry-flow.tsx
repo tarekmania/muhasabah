@@ -12,6 +12,7 @@ import { Search, Sparkles, Heart, ChevronDown } from 'lucide-react';
 import { useCatalog } from '@/hooks/use-catalog';
 import { curated_duas, type Entry, type CatalogItem } from '@/types';
 import { cn } from '@/lib/utils';
+import { AIInsights } from '@/components/ai-insights';
 
 interface UnifiedEntryFlowProps {
   onSave: (entry: Partial<Entry>) => void;
@@ -357,6 +358,15 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
           />
         </SpiritualCardContent>
       </SpiritualCard>
+
+      {/* AI Insights */}
+      {note && note.trim().length > 20 && (
+        <AIInsights 
+          note={note}
+          selectedItems={catalog.items.filter(item => selectedState.ids.includes(item.id)).map(item => item.title)}
+          type="reflection"
+        />
+      )}
 
       {/* Quantity Selector Modal */}
       <QuantitySelector
