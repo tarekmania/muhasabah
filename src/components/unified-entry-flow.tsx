@@ -5,12 +5,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { SpiritualCard, SpiritualCardHeader, SpiritualCardTitle, SpiritualCardContent } from '@/components/ui/spiritual-card';
 import { EnhancedItemChip } from '@/components/ui/enhanced-item-chip';
 import { SelectedTray } from '@/components/ui/selected-tray';
-import { SevereReflectionCard } from '@/components/reflection/severe-reflection-card';
-import { MissedOpportunityCard } from '@/components/reflection/missed-opportunity-card';
 import { QuantitySelector } from '@/components/reflection/quantity-selector';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, Sparkles, BookOpen, RefreshCw, Heart, Shield, Lightbulb } from 'lucide-react';
+import { Search, Sparkles, Heart } from 'lucide-react';
 import { useCatalog } from '@/hooks/use-catalog';
 import { curated_duas, type Entry, type CatalogItem } from '@/types';
 
@@ -41,9 +39,6 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
   const [activeTab, setActiveTab] = useState('explore');
   const [searchQuery, setSearchQuery] = useState('');
   const [note, setNote] = useState(existingEntry?.good?.note || existingEntry?.improve?.note || '');
-  const [severeNote, setSevereNote] = useState(existingEntry?.severeSlip?.note || '');
-  const [missedNote, setMissedNote] = useState(existingEntry?.missedOpportunity?.note || '');
-  const [missedIntention, setMissedIntention] = useState(existingEntry?.missedOpportunity?.intention || '');
   const [dua, setDua] = useState(existingEntry?.dua || '');
   const [duaIndex, setDuaIndex] = useState(0);
   
@@ -157,14 +152,14 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
       } : null,
       severeSlip: severeItemIds.length > 0 ? {
         itemIds: severeItemIds,
-        note: severeNote || undefined,
+        note: note || undefined,
         tawbah: true, // Always true for severe items
         qty: selectedState.qty
       } : null,
       missedOpportunity: missedOpportunityItemIds.length > 0 ? {
         itemIds: missedOpportunityItemIds,
-        note: missedNote || undefined,
-        intention: missedIntention || undefined,
+        note: note || undefined,
+        intention: undefined,
         qty: selectedState.qty
       } : null,
       dua: dua || undefined,
@@ -226,6 +221,8 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
                     const categoryItems = catalog.items.filter(item => item.category_id === category.id);
                     const goodCategoryItems = categoryItems.filter(item => item.type === 'GOOD');
                     const improveCategoryItems = categoryItems.filter(item => item.type === 'IMPROVE');
+                    const severeCategoryItems = categoryItems.filter(item => item.type === 'SEVERE');
+                    const missedCategoryItems = categoryItems.filter(item => item.type === 'MISSED_OPPORTUNITY');
                     
                     return (
                       <AccordionItem key={category.id} value={category.id}>
@@ -262,6 +259,32 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
                                 </h4>
                                 <div className="flex flex-wrap gap-2">
                                   {improveCategoryItems.map(renderItemChip)}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Severe items */}
+                            {severeCategoryItems.length > 0 && (
+                              <div>
+                                <h4 className="text-sm font-medium mb-2 text-destructive flex items-center gap-1">
+                                  <span className="text-lg">⚠️</span>
+                                  Serious matters (Tawbah)
+                                </h4>
+                                <div className="flex flex-wrap gap-2">
+                                  {severeCategoryItems.map(renderItemChip)}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Missed opportunities */}
+                            {missedCategoryItems.length > 0 && (
+                              <div>
+                                <h4 className="text-sm font-medium mb-2 text-muted-foreground flex items-center gap-1">
+                                  <span className="text-lg">💭</span>
+                                  Missed opportunities
+                                </h4>
+                                <div className="flex flex-wrap gap-2">
+                                  {missedCategoryItems.map(renderItemChip)}
                                 </div>
                               </div>
                             )}
@@ -308,40 +331,6 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
           </Tabs>
         </SpiritualCardContent>
       </SpiritualCard>
-
-      {/* Severe Reflection Section */}
-      <SevereReflectionCard
-        severeItems={severeItems}
-        selectedState={selectedState}
-        note={severeNote}
-        onNoteChange={setSevereNote}
-        onItemToggle={(itemId) => {
-          if (selectedState.ids.includes(itemId)) {
-            removeFromSelected(itemId);
-          } else {
-            addToSelected(itemId, 1);
-          }
-        }}
-        getItemUsageCount={getItemUsageCount}
-      />
-
-      {/* Missed Opportunity Section */}
-      <MissedOpportunityCard
-        missedOpportunityItems={missedOpportunityItems}
-        selectedState={selectedState}
-        note={missedNote}
-        intention={missedIntention}
-        onNoteChange={setMissedNote}
-        onIntentionChange={setMissedIntention}
-        onItemToggle={(itemId) => {
-          if (selectedState.ids.includes(itemId)) {
-            removeFromSelected(itemId);
-          } else {
-            addToSelected(itemId, 1);
-          }
-        }}
-        getItemUsageCount={getItemUsageCount}
-      />
 
       {/* Note Section */}
       <SpiritualCard variant="default">
