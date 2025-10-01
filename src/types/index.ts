@@ -1,9 +1,14 @@
 export type ItemType = 'GOOD' | 'IMPROVE' | 'SEVERE' | 'MISSED_OPPORTUNITY';
 
+export type DifficultyLevel = 'beginner' | 'intermediate' | 'advanced';
+export type FrequencyRecommendation = 'daily' | 'weekly' | 'occasional' | 'situational';
+export type ScenarioContext = 'workplace' | 'travel' | 'social' | 'home' | 'mosque' | 'study' | 'general';
+
 export type CatalogCategory = {
   id: string;
   title: string;
   emoji?: string;
+  scenario?: ScenarioContext;
 };
 
 export type CatalogItem = {
@@ -21,6 +26,11 @@ export type CatalogItem = {
   suggested_counts?: number[];
   hadith_reference?: string;
   default_count?: number;
+  difficulty?: DifficultyLevel;
+  time_commitment?: string; // e.g. "5 minutes", "15-30 minutes"
+  frequency?: FrequencyRecommendation;
+  scenario?: ScenarioContext;
+  reward_description?: string;
 };
 
 export type QuickTemplate = {
@@ -127,7 +137,7 @@ export const seedCatalog: Catalog = {
     { id: 'community', title: 'Community & Society', emoji: '🌍' },
     { id: 'charity', title: 'Charity & Giving', emoji: '💝' },
     { id: 'study', title: 'Learning & Growth', emoji: '📚' },
-    { id: 'work', title: 'Work & Productivity', emoji: '💼' },
+    { id: 'work', title: 'Work & Productivity', emoji: '💼', scenario: 'workplace' },
     { id: 'health', title: 'Health & Wellness', emoji: '🌱' },
     { id: 'time', title: 'Time & Priorities', emoji: '⏰' },
     { id: 'digital', title: 'Digital & Media', emoji: '📱' },
@@ -135,32 +145,74 @@ export const seedCatalog: Catalog = {
     { id: 'finance', title: 'Finance & Wealth', emoji: '💰' },
     { id: 'seasonal', title: 'Seasonal & Special', emoji: '🌙' },
     { id: 'emotions', title: 'Emotions & Mental Health', emoji: '💭' },
+    // NEW: Scenario-based categories
+    { id: 'workplace', title: 'Workplace Ethics', emoji: '💼', scenario: 'workplace' },
+    { id: 'travel-journey', title: 'Travel & Journey', emoji: '✈️', scenario: 'travel' },
+    { id: 'social-events', title: 'Social Events', emoji: '🎉', scenario: 'social' },
+    { id: 'ramadan', title: 'Ramadan Special', emoji: '🌙', scenario: 'general' },
+    { id: 'hajj-umrah', title: 'Hajj & Umrah', emoji: '🕋', scenario: 'travel' },
+    { id: 'student-life', title: 'Student Life', emoji: '🎓', scenario: 'study' },
+    { id: 'marriage', title: 'Marriage & Family', emoji: '💑', scenario: 'home' },
+    { id: 'parenting', title: 'Parenting', emoji: '👶', scenario: 'home' },
   ],
   items: [
-    // Prayer & Worship - GOOD (Expanded)
-    { id: 'fajr', title: 'Fajr on time', category_id: 'prayer', type: 'GOOD', emoji: '🌅' },
-    { id: 'five-prayers', title: '5 daily prayers', category_id: 'prayer', type: 'GOOD', emoji: '🤲' },
-    { id: 'sunnah-prayers', title: 'Sunnah prayers', category_id: 'prayer', type: 'GOOD', emoji: '🕌' },
-    { id: 'tahajjud', title: 'Tahajjud/Qiyam', category_id: 'prayer', type: 'GOOD', emoji: '🌙' },
-    { id: 'dua-after-prayer', title: 'Dua after prayer', category_id: 'prayer', type: 'GOOD', emoji: '🤲' },
-    { id: 'focused-prayer', title: 'Prayed with focus', category_id: 'prayer', type: 'GOOD', emoji: '🎯' },
-    { id: 'made-up-prayer', title: 'Made up missed prayer', category_id: 'prayer', type: 'GOOD', emoji: '🔄' },
-    { id: 'mosque-attendance', title: 'Attended mosque', category_id: 'prayer', type: 'GOOD', emoji: '🕌' },
-    { id: 'friday-prayer', title: 'Attended Jumu\'ah', category_id: 'prayer', type: 'GOOD', emoji: '🕌' },
-    { id: 'duha-prayer', title: 'Duha prayer', category_id: 'prayer', type: 'GOOD', emoji: '☀️' },
-    { id: 'witr-prayer', title: 'Witr prayer', category_id: 'prayer', type: 'GOOD', emoji: '🌙' },
-    { id: 'ishraq-prayer', title: 'Ishraq prayer', category_id: 'prayer', type: 'GOOD', emoji: '🌅' },
-    { id: 'tahiyyatul-masjid', title: 'Tahiyyat al-Masjid', category_id: 'prayer', type: 'GOOD', emoji: '🕌' },
-    { id: 'prayer-in-congregation', title: 'Prayed in congregation', category_id: 'prayer', type: 'GOOD', emoji: '👥' },
-    { id: 'first-row-prayer', title: 'Prayed in first row', category_id: 'prayer', type: 'GOOD', emoji: '1️⃣' },
-    { id: 'early-mosque-arrival', title: 'Arrived early to mosque', category_id: 'prayer', type: 'GOOD', emoji: '⏰' },
-    { id: 'salat-istikharah', title: 'Salat al-Istikhara', category_id: 'prayer', type: 'GOOD', emoji: '🤲' },
-    { id: 'salat-tawbah', title: 'Salat al-Tawbah', category_id: 'prayer', type: 'GOOD', emoji: '💚' },
-    { id: 'salat-hajah', title: 'Salat al-Hajah', category_id: 'prayer', type: 'GOOD', emoji: '🙏' },
-    { id: 'salat-taraweeh', title: 'Taraweeh prayer', category_id: 'prayer', type: 'GOOD', emoji: '🌙' },
-    { id: 'eclipse-prayer', title: 'Eclipse prayer', category_id: 'prayer', type: 'GOOD', emoji: '🌑' },
-    { id: 'rain-prayer', title: 'Rain prayer (Istisqa)', category_id: 'prayer', type: 'GOOD', emoji: '🌧️' },
-    { id: 'eid-prayer', title: 'Eid prayer', category_id: 'prayer', type: 'GOOD', emoji: '🎉' },
+    // Prayer & Worship - GOOD (Enhanced with new properties)
+    { 
+      id: 'fajr', 
+      title: 'Fajr on time', 
+      category_id: 'prayer', 
+      type: 'GOOD', 
+      emoji: '🌅',
+      difficulty: 'intermediate',
+      time_commitment: '5-10 minutes',
+      frequency: 'daily',
+      reward_description: 'Protection for the entire day',
+      hadith_reference: 'Sahih Muslim 657'
+    },
+    { 
+      id: 'five-prayers', 
+      title: '5 daily prayers', 
+      category_id: 'prayer', 
+      type: 'GOOD', 
+      emoji: '🤲',
+      difficulty: 'beginner',
+      time_commitment: '30-40 minutes total',
+      frequency: 'daily',
+      reward_description: 'Foundation of Islam, expiation of sins',
+      hadith_reference: 'Sahih Bukhari 528'
+    },
+    { 
+      id: 'tahajjud', 
+      title: 'Tahajjud/Qiyam', 
+      category_id: 'prayer', 
+      type: 'GOOD', 
+      emoji: '🌙',
+      difficulty: 'advanced',
+      time_commitment: '15-30 minutes',
+      frequency: 'daily',
+      reward_description: 'Closest time to Allah, special honor',
+      hadith_reference: 'Sahih Muslim 758'
+    },
+    { id: 'sunnah-prayers', title: 'Sunnah prayers', category_id: 'prayer', type: 'GOOD', emoji: '🕌', difficulty: 'beginner', frequency: 'daily' },
+    { id: 'dua-after-prayer', title: 'Dua after prayer', category_id: 'prayer', type: 'GOOD', emoji: '🤲', difficulty: 'beginner', frequency: 'daily' },
+    { id: 'focused-prayer', title: 'Prayed with focus', category_id: 'prayer', type: 'GOOD', emoji: '🎯', difficulty: 'intermediate', frequency: 'daily' },
+    { id: 'made-up-prayer', title: 'Made up missed prayer', category_id: 'prayer', type: 'GOOD', emoji: '🔄', difficulty: 'beginner', frequency: 'occasional' },
+    { id: 'mosque-attendance', title: 'Attended mosque', category_id: 'prayer', type: 'GOOD', emoji: '🕌', difficulty: 'beginner', frequency: 'daily', scenario: 'mosque' },
+    { id: 'friday-prayer', title: 'Attended Jumu\'ah', category_id: 'prayer', type: 'GOOD', emoji: '🕌', difficulty: 'beginner', frequency: 'weekly', scenario: 'mosque' },
+    { id: 'duha-prayer', title: 'Duha prayer', category_id: 'prayer', type: 'GOOD', emoji: '☀️', difficulty: 'intermediate', frequency: 'daily' },
+    { id: 'witr-prayer', title: 'Witr prayer', category_id: 'prayer', type: 'GOOD', emoji: '🌙', difficulty: 'beginner', frequency: 'daily' },
+    { id: 'ishraq-prayer', title: 'Ishraq prayer', category_id: 'prayer', type: 'GOOD', emoji: '🌅', difficulty: 'intermediate', frequency: 'occasional' },
+    { id: 'tahiyyatul-masjid', title: 'Tahiyyat al-Masjid', category_id: 'prayer', type: 'GOOD', emoji: '🕌', difficulty: 'beginner', frequency: 'situational', scenario: 'mosque' },
+    { id: 'prayer-in-congregation', title: 'Prayed in congregation', category_id: 'prayer', type: 'GOOD', emoji: '👥', difficulty: 'beginner', frequency: 'daily', scenario: 'mosque' },
+    { id: 'first-row-prayer', title: 'Prayed in first row', category_id: 'prayer', type: 'GOOD', emoji: '1️⃣', difficulty: 'beginner', frequency: 'situational', scenario: 'mosque' },
+    { id: 'early-mosque-arrival', title: 'Arrived early to mosque', category_id: 'prayer', type: 'GOOD', emoji: '⏰', difficulty: 'intermediate', frequency: 'situational', scenario: 'mosque' },
+    { id: 'salat-istikharah', title: 'Salat al-Istikhara', category_id: 'prayer', type: 'GOOD', emoji: '🤲', difficulty: 'intermediate', frequency: 'occasional' },
+    { id: 'salat-tawbah', title: 'Salat al-Tawbah', category_id: 'prayer', type: 'GOOD', emoji: '💚', difficulty: 'beginner', frequency: 'occasional' },
+    { id: 'salat-hajah', title: 'Salat al-Hajah', category_id: 'prayer', type: 'GOOD', emoji: '🙏', difficulty: 'intermediate', frequency: 'occasional' },
+    { id: 'salat-taraweeh', title: 'Taraweeh prayer', category_id: 'prayer', type: 'GOOD', emoji: '🌙', difficulty: 'beginner', frequency: 'situational' },
+    { id: 'eclipse-prayer', title: 'Eclipse prayer', category_id: 'prayer', type: 'GOOD', emoji: '🌑', difficulty: 'beginner', frequency: 'situational' },
+    { id: 'rain-prayer', title: 'Rain prayer (Istisqa)', category_id: 'prayer', type: 'GOOD', emoji: '🌧️', difficulty: 'beginner', frequency: 'situational' },
+    { id: 'eid-prayer', title: 'Eid prayer', category_id: 'prayer', type: 'GOOD', emoji: '🎉', difficulty: 'beginner', frequency: 'situational', scenario: 'social' },
     
     // Prayer & Worship - IMPROVE (Expanded)
     { id: 'delayed-prayer', title: 'Delayed prayer', category_id: 'prayer', type: 'IMPROVE', emoji: '⏰' },
@@ -643,6 +695,276 @@ export const seedCatalog: Catalog = {
     { id: 'missed-kindness', title: 'Could have been kinder', category_id: 'character', type: 'MISSED_OPPORTUNITY', emoji: '💝' },
     { id: 'missed-prayer-focus', title: 'Could have prayed with more focus', category_id: 'prayer', type: 'MISSED_OPPORTUNITY', emoji: '🎯' },
     { id: 'missed-gratitude', title: 'Could have been more grateful', category_id: 'character', type: 'MISSED_OPPORTUNITY', emoji: '🙏' },
+    
+    // WORKPLACE ETHICS - GOOD
+    { 
+      id: 'honest-work', 
+      title: 'Performed honest work', 
+      category_id: 'workplace', 
+      type: 'GOOD', 
+      emoji: '💼',
+      scenario: 'workplace',
+      difficulty: 'beginner',
+      frequency: 'daily',
+      reward_description: 'Halal income, barakah in earnings'
+    },
+    { 
+      id: 'helped-colleague', 
+      title: 'Helped colleague', 
+      category_id: 'workplace', 
+      type: 'GOOD', 
+      emoji: '🤝',
+      scenario: 'workplace',
+      difficulty: 'beginner',
+      frequency: 'situational'
+    },
+    { 
+      id: 'ethical-business', 
+      title: 'Conducted ethical business', 
+      category_id: 'workplace', 
+      type: 'GOOD', 
+      emoji: '⚖️',
+      scenario: 'workplace',
+      difficulty: 'intermediate',
+      frequency: 'daily',
+      hadith_reference: 'Sunan Ibn Majah 2146'
+    },
+    { 
+      id: 'rejected-bribe', 
+      title: 'Rejected bribery/corruption', 
+      category_id: 'workplace', 
+      type: 'GOOD', 
+      emoji: '🚫',
+      scenario: 'workplace',
+      difficulty: 'advanced',
+      frequency: 'situational',
+      reward_description: 'Protected honor and integrity'
+    },
+    { 
+      id: 'quality-work', 
+      title: 'Did quality work', 
+      category_id: 'workplace', 
+      type: 'GOOD', 
+      emoji: '✨',
+      scenario: 'workplace',
+      difficulty: 'intermediate',
+      frequency: 'daily',
+      hadith_reference: 'Al-Bayhaqi 334'
+    },
+    
+    // WORKPLACE ETHICS - IMPROVE
+    { id: 'workplace-gossip', title: 'Engaged in workplace gossip', category_id: 'workplace', type: 'IMPROVE', emoji: '🗣️', scenario: 'workplace', difficulty: 'intermediate' },
+    { id: 'lazy-work', title: 'Lazy at work', category_id: 'workplace', type: 'IMPROVE', emoji: '😴', scenario: 'workplace', difficulty: 'beginner' },
+    { id: 'dishonest-work', title: 'Dishonest in work', category_id: 'workplace', type: 'IMPROVE', emoji: '❌', scenario: 'workplace', difficulty: 'beginner' },
+    
+    // TRAVEL & JOURNEY - GOOD
+    { 
+      id: 'prayed-while-traveling', 
+      title: 'Maintained prayer while traveling', 
+      category_id: 'travel-journey', 
+      type: 'GOOD', 
+      emoji: '🕌',
+      scenario: 'travel',
+      difficulty: 'intermediate',
+      frequency: 'situational',
+      reward_description: 'Maintained connection with Allah'
+    },
+    { 
+      id: 'shared-islam-traveler', 
+      title: 'Shared Islam with traveler', 
+      category_id: 'travel-journey', 
+      type: 'GOOD', 
+      emoji: '💬',
+      scenario: 'travel',
+      difficulty: 'advanced',
+      frequency: 'situational'
+    },
+    { 
+      id: 'patient-in-travel', 
+      title: 'Patient during travel delays', 
+      category_id: 'travel-journey', 
+      type: 'GOOD', 
+      emoji: '😌',
+      scenario: 'travel',
+      difficulty: 'intermediate',
+      frequency: 'situational'
+    },
+    
+    // SOCIAL EVENTS - GOOD
+    { 
+      id: 'attended-wedding', 
+      title: 'Attended wedding invitation', 
+      category_id: 'social-events', 
+      type: 'GOOD', 
+      emoji: '💍',
+      scenario: 'social',
+      difficulty: 'beginner',
+      frequency: 'occasional',
+      hadith_reference: 'Sahih Bukhari 5177'
+    },
+    { 
+      id: 'attended-funeral', 
+      title: 'Attended funeral', 
+      category_id: 'social-events', 
+      type: 'GOOD', 
+      emoji: '🤲',
+      scenario: 'social',
+      difficulty: 'intermediate',
+      frequency: 'occasional',
+      reward_description: 'Following Prophet\'s Sunnah'
+    },
+    { 
+      id: 'islamic-gathering', 
+      title: 'Attended Islamic gathering', 
+      category_id: 'social-events', 
+      type: 'GOOD', 
+      emoji: '🕌',
+      scenario: 'social',
+      difficulty: 'beginner',
+      frequency: 'weekly'
+    },
+    { 
+      id: 'avoided-haram-event', 
+      title: 'Avoided haram event', 
+      category_id: 'social-events', 
+      type: 'GOOD', 
+      emoji: '🛡️',
+      scenario: 'social',
+      difficulty: 'advanced',
+      frequency: 'situational'
+    },
+    
+    // RAMADAN SPECIAL - GOOD
+    { 
+      id: 'sahoor', 
+      title: 'Ate Sahoor', 
+      category_id: 'ramadan', 
+      type: 'GOOD', 
+      emoji: '🌙',
+      difficulty: 'beginner',
+      frequency: 'daily',
+      hadith_reference: 'Sahih Bukhari 1923'
+    },
+    { 
+      id: 'iftar-others', 
+      title: 'Provided Iftar for others', 
+      category_id: 'ramadan', 
+      type: 'GOOD', 
+      emoji: '🍽️',
+      difficulty: 'intermediate',
+      frequency: 'daily',
+      reward_description: 'Reward equal to fasting person'
+    },
+    { 
+      id: 'laylatul-qadr', 
+      title: 'Sought Laylatul Qadr', 
+      category_id: 'ramadan', 
+      type: 'GOOD', 
+      emoji: '✨',
+      difficulty: 'advanced',
+      frequency: 'occasional',
+      reward_description: 'Better than 1000 months'
+    },
+    
+    // STUDENT LIFE - GOOD
+    { 
+      id: 'studied-with-intention', 
+      title: 'Studied with Islamic intention', 
+      category_id: 'student-life', 
+      type: 'GOOD', 
+      emoji: '📚',
+      scenario: 'study',
+      difficulty: 'intermediate',
+      frequency: 'daily'
+    },
+    { 
+      id: 'helped-classmate', 
+      title: 'Helped struggling classmate', 
+      category_id: 'student-life', 
+      type: 'GOOD', 
+      emoji: '🤝',
+      scenario: 'study',
+      difficulty: 'beginner',
+      frequency: 'situational'
+    },
+    { 
+      id: 'academic-honesty', 
+      title: 'Maintained academic honesty', 
+      category_id: 'student-life', 
+      type: 'GOOD', 
+      emoji: '✅',
+      scenario: 'study',
+      difficulty: 'intermediate',
+      frequency: 'situational'
+    },
+    
+    // MARRIAGE & FAMILY - GOOD
+    { 
+      id: 'kind-to-spouse', 
+      title: 'Kind to spouse', 
+      category_id: 'marriage', 
+      type: 'GOOD', 
+      emoji: '💑',
+      scenario: 'home',
+      difficulty: 'beginner',
+      frequency: 'daily',
+      hadith_reference: 'Sunan Ibn Majah 1977'
+    },
+    { 
+      id: 'marital-intimacy', 
+      title: 'Maintained marital bond', 
+      category_id: 'marriage', 
+      type: 'GOOD', 
+      emoji: '💕',
+      scenario: 'home',
+      difficulty: 'beginner',
+      frequency: 'situational',
+      reward_description: 'Act of worship when done righteously'
+    },
+    { 
+      id: 'resolved-conflict', 
+      title: 'Resolved marital conflict peacefully', 
+      category_id: 'marriage', 
+      type: 'GOOD', 
+      emoji: '🕊️',
+      scenario: 'home',
+      difficulty: 'advanced',
+      frequency: 'situational'
+    },
+    
+    // PARENTING - GOOD
+    { 
+      id: 'taught-child-islam', 
+      title: 'Taught child about Islam', 
+      category_id: 'parenting', 
+      type: 'GOOD', 
+      emoji: '📖',
+      scenario: 'home',
+      difficulty: 'intermediate',
+      frequency: 'daily',
+      reward_description: 'Continuous reward (Sadaqah Jariyah)'
+    },
+    { 
+      id: 'patient-with-child', 
+      title: 'Patient with child', 
+      category_id: 'parenting', 
+      type: 'GOOD', 
+      emoji: '🤗',
+      scenario: 'home',
+      difficulty: 'intermediate',
+      frequency: 'daily'
+    },
+    { 
+      id: 'prayed-with-child', 
+      title: 'Prayed with child', 
+      category_id: 'parenting', 
+      type: 'GOOD', 
+      emoji: '🤲',
+      scenario: 'home',
+      difficulty: 'beginner',
+      frequency: 'daily',
+      hadith_reference: 'Abu Dawud 495'
+    },
   ],
   templates: [
     {
