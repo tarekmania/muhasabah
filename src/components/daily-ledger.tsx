@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar as CalendarIcon, Scale, TrendingUp, TrendingDown, Minus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { QuantityEditDialog } from '@/components/quantity-edit-dialog';
 
 interface DailyLedgerProps {
   entry: Entry | null;
@@ -15,9 +16,11 @@ interface DailyLedgerProps {
   date: string;
   entries: Entry[];
   onDateChange?: (date: string) => void;
+  onQuantityChange?: (itemId: string, type: 'good' | 'improve' | 'severe' | 'missed', newQuantity: number) => void;
 }
 
-export function DailyLedger({ entry, catalogItems, date, entries, onDateChange }: DailyLedgerProps) {
+export function DailyLedger({ entry, catalogItems, date, entries, onDateChange, onQuantityChange }: DailyLedgerProps) {
+  const [editingQuantity, setEditingQuantity] = useState<{ itemId: string; type: string } | null>(null);
   // Parse date string properly to avoid timezone issues
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
     const [year, month, day] = date.split('-').map(Number);
@@ -265,38 +268,48 @@ export function DailyLedger({ entry, catalogItems, date, entries, onDateChange }
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {debits.map((debit, idx) => (
-                      <div
-                        key={idx}
-                        className={cn(
-                          "flex items-center justify-between p-3 rounded-lg border",
-                          debit.severity === 'severe' && "bg-destructive/10 border-destructive/30",
-                          debit.severity === 'moderate' && "bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900",
-                          debit.severity === 'light' && "bg-muted/50 border-border"
-                        )}
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="text-2xl">{debit.emoji}</span>
-                          <div>
-                            <p className="font-medium text-sm">{debit.title}</p>
-                            <Badge
-                              variant="outline"
-                              className={cn(
-                                "text-xs mt-1",
-                                debit.severity === 'severe' && "border-destructive text-destructive",
-                                debit.severity === 'moderate' && "border-orange-500 text-orange-600 dark:text-orange-400",
-                                debit.severity === 'light' && "border-muted-foreground text-muted-foreground"
-                              )}
-                            >
-                              {debit.severity} • {debit.count}×
-                            </Badge>
+                     {debits.map((debit, idx) => {
+                      const itemIdMatch = entry?.improve?.itemIds?.find(id => getItemById(id)?.title === debit.title) ||
+                                          entry?.severeSlip?.itemIds?.find(id => getItemById(id)?.title === debit.title) ||
+                                          entry?.missedOpportunity?.itemIds?.find(id => getItemById(id)?.title === debit.title);
+                      
+                      return (
+                        <div
+                          key={idx}
+                          className={cn(
+                            "flex items-center justify-between p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors",
+                            debit.severity === 'severe' && "bg-destructive/10 border-destructive/30",
+                            debit.severity === 'moderate' && "bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900",
+                            debit.severity === 'light' && "bg-muted/50 border-border"
+                          )}
+                          onClick={() => itemIdMatch && setEditingQuantity({ itemId: itemIdMatch, type: debit.severity })}
+                        >
+                          <div className="flex items-center gap-3 flex-1">
+                            <span className="text-2xl">{debit.emoji}</span>
+                            <div className="flex-1">
+                              <p className="font-medium text-sm">{debit.title}</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Badge
+                                  variant="outline"
+                                  className={cn(
+                                    "text-xs",
+                                    debit.severity === 'severe' && "border-destructive text-destructive",
+                                    debit.severity === 'moderate' && "border-orange-500 text-orange-600 dark:text-orange-400",
+                                    debit.severity === 'light' && "border-muted-foreground text-muted-foreground"
+                                  )}
+                                >
+                                  {debit.count}×
+                                </Badge>
+                                <span className="text-xs text-muted-foreground">Tap to edit</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-lg font-bold text-destructive">-{debit.weight}</p>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-lg font-bold text-destructive">-{debit.weight}</p>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                     <div className="pt-4 border-t-2 border-destructive/20">
                       <div className="flex items-center justify-between font-bold">
                         <span>Total Debits</span>
@@ -324,25 +337,33 @@ export function DailyLedger({ entry, catalogItems, date, entries, onDateChange }
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {credits.map((credit, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/20"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="text-2xl">{credit.emoji}</span>
-                          <div>
-                            <p className="font-medium text-sm">{credit.title}</p>
-                            <Badge variant="outline" className="text-xs mt-1 border-primary text-primary">
-                              {credit.count}×
-                            </Badge>
+                   {credits.map((credit, idx) => {
+                      const itemId = entry?.good?.itemIds?.find(id => getItemById(id)?.title === credit.title);
+                      
+                      return (
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/20 cursor-pointer hover:bg-primary/10 transition-colors"
+                          onClick={() => itemId && setEditingQuantity({ itemId, type: 'good' })}
+                        >
+                          <div className="flex items-center gap-3 flex-1">
+                            <span className="text-2xl">{credit.emoji}</span>
+                            <div className="flex-1">
+                              <p className="font-medium text-sm">{credit.title}</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Badge variant="outline" className="text-xs border-primary text-primary">
+                                  {credit.count}×
+                                </Badge>
+                                <span className="text-xs text-muted-foreground">Tap to edit</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-lg font-bold text-primary">+{credit.weight}</p>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-lg font-bold text-primary">+{credit.weight}</p>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                     <div className="pt-4 border-t-2 border-primary/20">
                       <div className="flex items-center justify-between font-bold">
                         <span>Total Credits</span>
@@ -405,6 +426,43 @@ export function DailyLedger({ entry, catalogItems, date, entries, onDateChange }
           </div>
         </>
       )}
+
+      {/* Quantity Edit Dialog */}
+      {editingQuantity && (() => {
+        const item = getItemById(editingQuantity.itemId);
+        if (!item) return null;
+
+        const getCurrentQuantity = () => {
+          if (editingQuantity.type === 'good') return entry?.good?.qty?.[editingQuantity.itemId] || 1;
+          if (editingQuantity.type === 'light') return entry?.improve?.qty?.[editingQuantity.itemId] || 1;
+          if (editingQuantity.type === 'severe') return entry?.severeSlip?.qty?.[editingQuantity.itemId] || 1;
+          if (editingQuantity.type === 'moderate') return entry?.missedOpportunity?.qty?.[editingQuantity.itemId] || 1;
+          return 1;
+        };
+
+        const handleSave = (newQuantity: number) => {
+          if (onQuantityChange) {
+            let type: 'good' | 'improve' | 'severe' | 'missed' = 'good';
+            if (editingQuantity.type === 'light') type = 'improve';
+            else if (editingQuantity.type === 'severe') type = 'severe';
+            else if (editingQuantity.type === 'moderate') type = 'missed';
+            
+            onQuantityChange(editingQuantity.itemId, type, newQuantity);
+          }
+          setEditingQuantity(null);
+        };
+
+        return (
+          <QuantityEditDialog
+            isOpen={true}
+            onClose={() => setEditingQuantity(null)}
+            itemTitle={item.title}
+            itemEmoji={item.emoji}
+            currentQuantity={getCurrentQuantity()}
+            onSave={handleSave}
+          />
+        );
+      })()}
     </div>
   );
 }

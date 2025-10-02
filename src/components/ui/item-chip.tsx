@@ -68,8 +68,6 @@ export interface ItemChipProps
   usageCount?: number;
   quantity?: number;
   onToggle?: () => void;
-  onLongPress?: () => void;
-  showAdd?: boolean;
 }
 
 const ItemChip = React.forwardRef<HTMLDivElement, ItemChipProps>(
@@ -83,97 +81,41 @@ const ItemChip = React.forwardRef<HTMLDivElement, ItemChipProps>(
     usageCount, 
     quantity,
     onToggle, 
-    onLongPress,
-    showAdd = false,
     ...props 
   }, ref) => {
-    const [isLongPressing, setIsLongPressing] = React.useState(false);
-    const longPressTimer = React.useRef<NodeJS.Timeout>();
-
-    const handleTouchStart = () => {
-      setIsLongPressing(false);
-      longPressTimer.current = setTimeout(() => {
-        setIsLongPressing(true);
-        onLongPress?.();
-      }, 500);
+    const handleClick = () => {
+      onToggle?.();
     };
-
-    const handleTouchEnd = () => {
-      if (longPressTimer.current) {
-        clearTimeout(longPressTimer.current);
-      }
-      if (!isLongPressing) {
-        onToggle?.();
-      }
-      setIsLongPressing(false);
-    };
-
-    const handleMouseDown = () => {
-      longPressTimer.current = setTimeout(() => {
-        setIsLongPressing(true);
-        onLongPress?.();
-      }, 500);
-    };
-
-    const handleMouseUp = () => {
-      if (longPressTimer.current) {
-        clearTimeout(longPressTimer.current);
-      }
-      if (!isLongPressing) {
-        onToggle?.();
-      }
-      setIsLongPressing(false);
-    };
-
-    const handleMouseLeave = () => {
-      if (longPressTimer.current) {
-        clearTimeout(longPressTimer.current);
-      }
-      setIsLongPressing(false);
-    };
-
-    React.useEffect(() => {
-      return () => {
-        if (longPressTimer.current) {
-          clearTimeout(longPressTimer.current);
-        }
-      };
-    }, []);
 
     return (
       <div
         className={cn(itemChipVariants({ variant, size, selected, className }))}
         ref={ref}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave}
+        onClick={handleClick}
+        role="button"
+        tabIndex={0}
+        aria-pressed={selected}
         {...props}
       >
         {emoji && <span className="text-xl">{emoji}</span>}
         <span className="flex-1">{label}</span>
         
-        {/* Usage count badge */}
-        {usageCount && usageCount > 0 && (
-          <span className="text-xs px-2 py-1 rounded-full bg-background/20 text-current">
-            ×{usageCount}
-          </span>
-        )}
-        
-        {/* Quantity indicator for selected items */}
+        {/* Show count badge when selected with quantity > 1 */}
         {selected && quantity && quantity > 1 && (
-          <span className="text-sm px-2 py-1 rounded-full bg-background/30 text-current font-bold">
+          <span className="px-2 py-0.5 text-sm font-bold bg-background/40 rounded-full">
             {quantity}
           </span>
         )}
         
+        {/* Show usage count when not selected */}
+        {!selected && usageCount && usageCount > 0 && (
+          <span className="text-xs text-current/60">
+            {usageCount}
+          </span>
+        )}
+        
         {/* Selection indicator */}
-        {selected ? (
-          <Check className="h-5 w-5" />
-        ) : showAdd ? (
-          <Plus className="h-5 w-5 opacity-60" />
-        ) : null}
+        {selected && <Check className="h-5 w-5" />}
       </div>
     );
   }

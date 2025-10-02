@@ -66,6 +66,40 @@ export default function Entry({ entries, onSave, onUpdate }: EntryPageProps) {
     }
   };
 
+  const handleQuantityChange = (itemId: string, type: 'good' | 'improve' | 'severe' | 'missed', newQuantity: number) => {
+    if (!existingEntry) return;
+
+    const updated = { ...existingEntry };
+    
+    if (type === 'good' && updated.good) {
+      updated.good = {
+        ...updated.good,
+        qty: { ...updated.good.qty, [itemId]: newQuantity }
+      };
+    } else if (type === 'improve' && updated.improve) {
+      updated.improve = {
+        ...updated.improve,
+        qty: { ...updated.improve.qty, [itemId]: newQuantity }
+      };
+    } else if (type === 'severe' && updated.severeSlip) {
+      updated.severeSlip = {
+        ...updated.severeSlip,
+        qty: { ...updated.severeSlip.qty, [itemId]: newQuantity }
+      };
+    } else if (type === 'missed' && updated.missedOpportunity) {
+      updated.missedOpportunity = {
+        ...updated.missedOpportunity,
+        qty: { ...updated.missedOpportunity.qty, [itemId]: newQuantity }
+      };
+    }
+
+    onUpdate(updated);
+    toast({
+      title: "Quantity Updated",
+      description: "Item quantity has been updated in the balance sheet.",
+    });
+  };
+
   const handleDateSelect = (date: Date) => {
     const dateISO = format(date, 'yyyy-MM-dd');
     setSelectedDate(date);
@@ -123,6 +157,7 @@ export default function Entry({ entries, onSave, onUpdate }: EntryPageProps) {
           date={targetDate}
           entries={entries}
           onDateChange={handleDateChange}
+          onQuantityChange={handleQuantityChange}
         />
       </div>
 

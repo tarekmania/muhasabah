@@ -1,10 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { CatalogItem, SelectedState } from '@/types';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { X, Plus } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
+import { Button } from './button';
+import { Check } from 'lucide-react';
+import { Badge } from './badge';
+import { cn } from '@/lib/utils';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from './sheet';
 
 interface SelectedTrayProps {
   selectedItems: CatalogItem[];
@@ -19,135 +26,86 @@ interface SelectedTrayProps {
 export function SelectedTray({
   selectedItems,
   selectedState,
-  onCountChange,
-  onRemoveItem,
   onSaveToday,
   onClear,
   isVisible
 }: SelectedTrayProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
   if (!isVisible || selectedItems.length === 0) {
     return null;
   }
 
   const totalCount = Object.values(selectedState.qty).reduce((sum, count) => sum + count, 0);
 
-  const handleQuickAdd = (itemId: string, amount: number) => {
-    const currentCount = selectedState.qty[itemId] || 0;
-    onCountChange(itemId, currentCount + amount);
-  };
-
-  const handleCountChange = (itemId: string, newCount: number) => {
-    if (newCount <= 0) {
-      onRemoveItem(itemId);
-    } else {
-      onCountChange(itemId, newCount);
-    }
+  const handleConfirm = () => {
+    onSaveToday();
+    setIsOpen(false);
   };
 
   return (
-    <div className="fixed bottom-16 left-0 right-0 z-40 bg-background border-t shadow-lg">
-      <Card className="rounded-none border-0 border-t">
-        <CardHeader className="pb-3 pt-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <span>Selected</span>
-              <Badge variant="secondary" className="text-base px-2">{selectedItems.length}</Badge>
-            </CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClear}
-              className="text-muted-foreground hover:text-foreground h-10 w-10"
-            >
-              <X className="h-5 w-5" />
-            </Button>
-          </div>
-        </CardHeader>
-        
-        <CardContent className="pt-0 pb-4">
-          {/* Selected Items List */}
-          <div className="space-y-3 max-h-40 overflow-y-auto mb-4">
-            {selectedItems.map((item) => {
-              const count = selectedState.qty[item.id] || 0;
-              return (
-                <div key={item.id} className="flex items-center justify-between bg-muted/50 rounded-lg p-3 min-h-[56px]">
-                  <div className="flex items-center gap-2 flex-1">
-                    <span className="text-xl">{item.emoji}</span>
-                    <span className="font-medium text-base">{item.title}</span>
-                    {item.suggested_counts && item.suggested_counts.length > 0 && (
-                      <div className="flex gap-1">
-                        {item.suggested_counts.slice(0, 2).map((suggestedCount) => (
-                          <Button
-                            key={suggestedCount}
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleQuickAdd(item.id, suggestedCount)}
-                            className="h-8 px-3 text-sm min-w-[44px]"
-                          >
-                            +{suggestedCount}
-                          </Button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    {/* Count Controls */}
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleCountChange(item.id, count - 1)}
-                        className="h-10 w-10 p-0 text-lg"
-                      >
-                        -
-                      </Button>
-                      <span className="font-bold text-xl min-w-[2.5rem] text-center">
-                        {count}
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleCountChange(item.id, count + 1)}
-                        className="h-10 w-10 p-0"
-                      >
-                        <Plus className="h-5 w-5" />
-                      </Button>
-                    </div>
-                    
-                    {/* Remove Button */}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onRemoveItem(item.id)}
-                      className="h-10 w-10 p-0 text-muted-foreground hover:text-red-600"
-                    >
-                      <X className="h-5 w-5" />
-                    </Button>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <SheetTrigger asChild>
+        <Button
+          size="lg"
+          className={cn(
+            "fixed bottom-20 right-4 z-40 h-14 px-6 rounded-full shadow-lg",
+            "animate-in slide-in-from-bottom-2"
+          )}
+        >
+          <Check className="h-5 w-5 mr-2" />
+          Add {selectedItems.length} {selectedItems.length === 1 ? 'item' : 'items'}
+          <Badge variant="secondary" className="ml-2">
+            {totalCount}
+          </Badge>
+        </Button>
+      </SheetTrigger>
+
+      <SheetContent side="bottom" className="h-[60vh]">
+        <SheetHeader>
+          <SheetTitle>Selected Items</SheetTitle>
+          <SheetDescription>
+            Review items to add to today's entry. Adjust quantities later in the balance sheet.
+          </SheetDescription>
+        </SheetHeader>
+
+        <div className="mt-6 space-y-3 overflow-y-auto max-h-[calc(60vh-180px)]">
+          {selectedItems.map((item) => {
+            const count = selectedState.qty[item.id] || 1;
+            return (
+              <div
+                key={item.id}
+                className={cn(
+                  "flex items-center justify-between p-3 rounded-lg border",
+                  item.type === 'GOOD' && "bg-primary/5 border-primary/20",
+                  item.type === 'IMPROVE' && "bg-muted/50 border-border",
+                  item.type === 'SEVERE' && "bg-destructive/5 border-destructive/20",
+                  item.type === 'MISSED_OPPORTUNITY' && "bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900"
+                )}
+              >
+                <div className="flex items-center gap-3 flex-1">
+                  <span className="text-2xl">{item.emoji}</span>
+                  <div>
+                    <p className="font-medium text-sm">{item.title}</p>
+                    <Badge variant="outline" className="text-xs mt-1">
+                      {count}×
+                    </Badge>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
+        </div>
 
-          <Separator className="my-4" />
-
-          {/* Summary and Action */}
-          <div className="flex items-center justify-between gap-4">
-            <div className="text-base text-muted-foreground">
-              <span className="font-medium">{totalCount}</span> total deeds
-            </div>
-            
-            <Button 
-              onClick={onSaveToday}
-              className="bg-green-600 hover:bg-green-700 text-white font-medium px-6 h-12 text-base"
-              disabled={selectedItems.length === 0}
-            >
-              Add {totalCount} to Today
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        <div className="flex gap-2 mt-6">
+          <Button variant="outline" onClick={onClear} className="flex-1">
+            Clear All
+          </Button>
+          <Button onClick={handleConfirm} className="flex-1">
+            Add to Today
+          </Button>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }

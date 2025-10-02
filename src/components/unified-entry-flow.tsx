@@ -1,14 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { SpiritualCard, SpiritualCardHeader, SpiritualCardTitle, SpiritualCardContent } from '@/components/ui/spiritual-card';
-import { EnhancedItemChip } from '@/components/ui/enhanced-item-chip';
+import { ItemChip } from '@/components/ui/item-chip';
 import { SelectedTray } from '@/components/ui/selected-tray';
-import { QuantitySelector } from '@/components/reflection/quantity-selector';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
-import { Search, Sparkles, Heart, ChevronDown } from 'lucide-react';
+import { Search, Sparkles, Heart, ChevronDown, Clock, TrendingUp } from 'lucide-react';
 import { useCatalog } from '@/hooks/use-catalog';
 import { curated_duas, type Entry, type CatalogItem } from '@/types';
 import { cn } from '@/lib/utils';
@@ -47,20 +46,6 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
   
   // Track the last hydrated entry to prevent re-hydration
   const lastHydratedEntryId = useRef<string | null>(null);
-  
-  // Quantity selector state
-  const [quantitySelector, setQuantitySelector] = useState<{
-    isOpen: boolean;
-    itemId: string;
-    itemTitle: string;
-    itemEmoji?: string;
-    currentQuantity: number;
-  }>({
-    isOpen: false,
-    itemId: '',
-    itemTitle: '',
-    currentQuantity: 1,
-  });
 
   // Load existing entry data on mount (idempotent)
   useEffect(() => {
@@ -105,28 +90,42 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
   const severeItems = catalog.items.filter(item => item.type === 'SEVERE');
   const missedOpportunityItems = catalog.items.filter(item => item.type === 'MISSED_OPPORTUNITY');
 
-  const suggestDua = () => {
-    const nextIndex = (duaIndex + 1) % curated_duas.length;
-    setDua(curated_duas[nextIndex]);
-    setDuaIndex(nextIndex);
-  };
+  // Get frequently used items
+  const recentlyUsedItems = useMemo(() => {
+    const itemsWithLastUsed = catalog.items.map(item => ({
+      item,
+      lastUsed: parseInt(localStorage.getItem(`lastUsed_${item.id}`) || '0')
+    }));
+    return itemsWithLastUsed
+      .filter(({ lastUsed }) => lastUsed > 0)
+      .sort((a, b) => b.lastUsed - a.lastUsed)
+      .slice(0, 6)
+      .map(({ item }) => item);
+  }, [catalog.items]);
 
-  const handleLongPress = (item: CatalogItem) => {
-    setQuantitySelector({
-      isOpen: true,
-      itemId: item.id,
-      itemTitle: item.title,
-      itemEmoji: item.emoji,
-      currentQuantity: selectedState.qty[item.id] || 1,
-    });
-  };
+  const mostUsedItems = useMemo(() => {
+    return [...catalog.items]
+      .sort((a, b) => getItemUsageCount(b.id) - getItemUsageCount(a.id))
+      .filter(item => getItemUsageCount(item.id) > 0)
+      .slice(0, 6);
+  }, [catalog.items, getItemUsageCount]);
 
-  const handleQuantityConfirm = (quantity: number) => {
-    addToSelected(quantitySelector.itemId, quantity - (selectedState.qty[quantitySelector.itemId] || 0));
+  const handleItemToggle = (item: CatalogItem) => {
+    const isSelected = selectedState.ids.includes(item.id);
+    if (isSelected) {
+      removeFromSelected(item.id);
+    } else {
+      addToSelected(item.id, 1); // Default quantity of 1
+    }
   };
 
   const handleAddToToday = () => {
     if (totalSelected === 0) return;
+
+    // Track last used timestamp for recently used feature
+    selectedState.ids.forEach(id => {
+      localStorage.setItem(`lastUsed_${id}`, Date.now().toString());
+    });
 
     const goodItemIds = selectedState.ids.filter(id => 
       goodItems.find(item => item.id === id)
@@ -176,31 +175,28 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
     clearSelected();
   };
 
-  const handleCountChange = (itemId: string, newCount: number) => {
-    if (newCount <= 0) {
-      removeFromSelected(itemId);
-    } else {
-      const currentCount = selectedState.qty[itemId] || 0;
-      const difference = newCount - currentCount;
-      addToSelected(itemId, difference);
-    }
-  };
-
   const renderItemChip = (item: CatalogItem) => {
+    const isSelected = selectedState.ids.includes(item.id);
+    const count = selectedState.qty[item.id] || 0;
+    
     return (
-      <EnhancedItemChip
+      <ItemChip
         key={item.id}
-        item={item}
-        count={selectedState.qty[item.id] || 0}
-        onCountChange={handleCountChange}
+        emoji={item.emoji}
+        label={item.title}
+        variant={item.type.toLowerCase() as any}
+        selected={isSelected}
+        quantity={count}
         usageCount={getItemUsageCount(item.id)}
-        isSelected={selectedState.ids.includes(item.id)}
+        onToggle={() => handleItemToggle(item)}
+        size="default"
+        className="min-h-[48px]"
       />
     );
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-24">
       {/* Main Entry Interface */}
       <SpiritualCard variant="elevated">
         <SpiritualCardHeader>
@@ -233,7 +229,7 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
                 {searchQuery && (
                   <div className="space-y-3">
                     {searchResults.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
+                      <div className="grid grid-cols-1 gap-2">
                         {searchResults.map((item) => renderItemChip(item))}
                       </div>
                     ) : (
@@ -246,6 +242,46 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
               </div>
             </CollapsibleContent>
           </Collapsible>
+
+          {/* Recently Used Section */}
+          {!showSearch && recentlyUsedItems.length > 0 && (
+            <Collapsible defaultOpen className="mb-4">
+              <CollapsibleTrigger className="w-full">
+                <div className="flex items-center justify-between p-3 bg-accent/50 rounded-lg hover:bg-accent min-h-[48px]">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-5 w-5 text-primary" />
+                    <span className="font-semibold">Recently Used</span>
+                  </div>
+                  <ChevronDown className="h-5 w-5" />
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="grid grid-cols-1 gap-2 mt-2">
+                  {recentlyUsedItems.map(item => renderItemChip(item))}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
+
+          {/* Most Used Section */}
+          {!showSearch && mostUsedItems.length > 0 && (
+            <Collapsible defaultOpen className="mb-4">
+              <CollapsibleTrigger className="w-full">
+                <div className="flex items-center justify-between p-3 bg-accent/50 rounded-lg hover:bg-accent min-h-[48px]">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                    <span className="font-semibold">Most Used</span>
+                  </div>
+                  <ChevronDown className="h-5 w-5" />
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="grid grid-cols-1 gap-2 mt-2">
+                  {mostUsedItems.map(item => renderItemChip(item))}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
 
           {/* Categories */}
           <div className="space-y-3">
@@ -291,7 +327,7 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
                             <Heart className="h-4 w-4" />
                             Good deeds
                           </h4>
-                          <div className="flex flex-wrap gap-2">
+                          <div className="grid grid-cols-1 gap-2">
                             {goodCategoryItems.map(renderItemChip)}
                           </div>
                         </div>
@@ -304,7 +340,7 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
                             <Sparkles className="h-4 w-4" />
                             Areas to improve
                           </h4>
-                          <div className="flex flex-wrap gap-2">
+                          <div className="grid grid-cols-1 gap-2">
                             {improveCategoryItems.map(renderItemChip)}
                           </div>
                         </div>
@@ -317,7 +353,7 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
                             <span className="text-lg">⚠️</span>
                             Serious matters (Tawbah)
                           </h4>
-                          <div className="flex flex-wrap gap-2">
+                          <div className="grid grid-cols-1 gap-2">
                             {severeCategoryItems.map(renderItemChip)}
                           </div>
                         </div>
@@ -330,7 +366,7 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
                             <span className="text-lg">💭</span>
                             Missed opportunities
                           </h4>
-                          <div className="flex flex-wrap gap-2">
+                          <div className="grid grid-cols-1 gap-2">
                             {missedCategoryItems.map(renderItemChip)}
                           </div>
                         </div>
@@ -368,22 +404,11 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
         />
       )}
 
-      {/* Quantity Selector Modal */}
-      <QuantitySelector
-        isOpen={quantitySelector.isOpen}
-        onClose={() => setQuantitySelector(prev => ({ ...prev, isOpen: false }))}
-        itemTitle={quantitySelector.itemTitle}
-        itemEmoji={quantitySelector.itemEmoji}
-        currentQuantity={quantitySelector.currentQuantity}
-        onQuantityChange={(quantity) => setQuantitySelector(prev => ({ ...prev, currentQuantity: quantity }))}
-        onConfirm={handleQuantityConfirm}
-      />
-
       {/* Selected Tray */}
       <SelectedTray
         selectedItems={catalog.items.filter(item => selectedState.ids.includes(item.id))}
         selectedState={selectedState}
-        onCountChange={handleCountChange}
+        onCountChange={() => {}}
         onRemoveItem={removeFromSelected}
         onSaveToday={handleAddToToday}
         onClear={clearSelected}
