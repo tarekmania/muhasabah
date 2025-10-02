@@ -40,17 +40,31 @@ export default function Entry({ entries, onSave, onUpdate }: EntryPageProps) {
 
   const handleSave = (entryData: Partial<EntryType>) => {
     if (existingEntry) {
-      // Update existing entry
-      const updated: EntryType = {
-        ...existingEntry,
-        ...entryData,
-        status: 'complete' as EntryStatus
-      };
-      onUpdate(updated);
-      toast({
-        title: "Entry Updated",
-        description: `Your entry for ${format(selectedDate, 'MMMM d, yyyy')} has been updated.`,
-      });
+      // Check if there are actual changes
+      const hasChanges = JSON.stringify(existingEntry) !== JSON.stringify({ ...existingEntry, ...entryData });
+      
+      if (hasChanges) {
+        // Update existing entry
+        const updated: EntryType = {
+          ...existingEntry,
+          ...entryData,
+          status: 'complete' as EntryStatus
+        };
+        onUpdate(updated);
+        toast({
+          title: "Entry Updated",
+          description: `Your entry for ${format(selectedDate, 'MMMM d, yyyy')} has been updated.`,
+          duration: 1000,
+        });
+      } else {
+        // No changes, just update without toast
+        const updated: EntryType = {
+          ...existingEntry,
+          ...entryData,
+          status: 'complete' as EntryStatus
+        };
+        onUpdate(updated);
+      }
     } else {
       // Create new entry
       const newEntry: Partial<EntryType> = {
@@ -62,6 +76,7 @@ export default function Entry({ entries, onSave, onUpdate }: EntryPageProps) {
       toast({
         title: "Entry Saved",
         description: `Your entry for ${format(selectedDate, 'MMMM d, yyyy')} has been saved.`,
+        duration: 1000,
       });
     }
   };
@@ -96,7 +111,8 @@ export default function Entry({ entries, onSave, onUpdate }: EntryPageProps) {
     onUpdate(updated);
     toast({
       title: "Quantity Updated",
-      description: "Item quantity has been updated in the balance sheet.",
+      description: "Item quantity has been updated.",
+      duration: 1000,
     });
   };
 

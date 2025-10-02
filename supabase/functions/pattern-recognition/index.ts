@@ -21,28 +21,39 @@ serve(async (req) => {
       );
     }
 
-    // Analyze patterns
+    // Analyze patterns with new entry structure
     const itemFrequency = new Map();
     const categoryFrequency = new Map();
     let totalGoodDeeds = 0;
-    let totalMissedItems = 0;
+    let totalImproveItems = 0;
     
     entries.forEach((entry: any) => {
-      if (entry.selectedState?.ids) {
-        entry.selectedState.ids.forEach((id: string) => {
+      // Count good deeds
+      if (entry.good?.itemIds) {
+        entry.good.itemIds.forEach((id: string) => {
           itemFrequency.set(id, (itemFrequency.get(id) || 0) + 1);
-          const qty = entry.selectedState.qty?.[id] || 1;
+          const qty = entry.good.qty?.[id] || 1;
           totalGoodDeeds += qty;
         });
       }
       
-      if (entry.categoryState) {
-        Object.entries(entry.categoryState).forEach(([category, items]: [string, any]) => {
-          if (items?.missed?.length > 0) {
-            categoryFrequency.set(category, (categoryFrequency.get(category) || 0) + items.missed.length);
-            totalMissedItems += items.missed.length;
-          }
+      // Count areas to improve
+      if (entry.improve?.itemIds) {
+        entry.improve.itemIds.forEach((id: string) => {
+          const category = 'improve'; // Could be enhanced with actual category lookup
+          categoryFrequency.set(category, (categoryFrequency.get(category) || 0) + 1);
+          totalImproveItems++;
         });
+      }
+      
+      // Count severe slips
+      if (entry.severeSlip?.itemIds) {
+        totalImproveItems += entry.severeSlip.itemIds.length;
+      }
+      
+      // Count missed opportunities
+      if (entry.missedOpportunity?.itemIds) {
+        totalImproveItems += entry.missedOpportunity.itemIds.length;
       }
     });
 
@@ -51,11 +62,11 @@ serve(async (req) => {
       .filter(([_, count]) => count / entries.length > 0.7)
       .map(([id, count]) => ({ id, frequency: count }));
 
-    // Find areas needing attention (frequently missed)
+    // Find areas needing attention (frequently noted for improvement)
     const strugglingAreas = Array.from(categoryFrequency.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, 3)
-      .map(([category, count]) => ({ category, missedCount: count }));
+      .map(([category, count]) => ({ category, improveCount: count }));
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
@@ -78,6 +89,7 @@ Guidelines:
 
 Entries analyzed: ${entries.length}
 Total good deeds recorded: ${totalGoodDeeds}
+Total areas to improve: ${totalImproveItems}
 Consistent habits: ${consistentHabits.length} practices
 ${strugglingAreas.length > 0 ? `Areas needing attention: ${strugglingAreas.map(a => a.category).join(', ')}` : 'No major struggles identified'}
 
@@ -115,7 +127,7 @@ Provide encouraging insights and gentle guidance for continued growth.`;
           consistentHabits,
           strugglingAreas,
           totalGoodDeeds,
-          totalMissedItems,
+          totalImproveItems,
           entriesAnalyzed: entries.length
         },
         aiInsight,

@@ -4,9 +4,10 @@ import { format } from 'date-fns';
 import { SpiritualCard, SpiritualCardContent, SpiritualCardHeader, SpiritualCardTitle } from '@/components/ui/spiritual-card';
 import { Button } from '@/components/ui/button';
 import { CalendarWidget } from '@/components/calendar-widget';
-import { Clock, TrendingUp, Flame, Moon, Sun, Sunrise, Sunset, BookOpen, Edit3, CheckCircle2 } from 'lucide-react';
+import { Clock, TrendingUp, Flame, Moon, Sun, Sunrise, Sunset, BookOpen, Edit3, CheckCircle2, Award, BarChart3 } from 'lucide-react';
 import { Entry } from '@/types';
 import { useCatalog } from '@/hooks/use-catalog';
+import { calculateDaysSinceFirstEntry } from '@/lib/dashboard-helpers';
 
 interface DashboardProps {
   entries: Entry[];
@@ -127,6 +128,78 @@ export default function Dashboard({ entries }: DashboardProps) {
     };
   }, [entries]);
 
+  // Calculate all-time statistics
+  const allTimeStats = useMemo(() => {
+    const totalGoodDeeds = entries.reduce((sum, e) => {
+      const goodCount = e.good?.itemIds?.reduce((acc, id) => acc + (e.good?.qty?.[id] || 1), 0) || 0;
+      return sum + goodCount;
+    }, 0);
+
+    const totalImproveAreas = entries.reduce((sum, e) => {
+      const improveCount = (e.improve?.itemIds?.length || 0) + 
+                          (e.severeSlip?.itemIds?.length || 0) + 
+                          (e.missedOpportunity?.itemIds?.length || 0);
+      return sum + improveCount;
+    }, 0);
+
+    const averageActionsPerDay = entries.length > 0 
+      ? Math.round(entries.reduce((sum, e) => {
+          const goodCount = e.good?.itemIds?.length || 0;
+          return sum + goodCount;
+        }, 0) / entries.length)
+      : 0;
+
+    const daysSinceFirst = calculateDaysSinceFirstEntry(entries);
+    const consistencyRate = daysSinceFirst > 0 
+      ? Math.round((entries.length / daysSinceFirst) * 100)
+      : 0;
+
+    return {
+      totalGoodDeeds,
+      totalImproveAreas,
+      averageActionsPerDay,
+      consistencyRate,
+    };
+  }, [entries]);
+
+  // Calculate personal records
+  const personalRecords = useMemo(() => {
+    const bestDay = entries.reduce((best, e) => {
+      const goodCount = e.good?.itemIds?.reduce((acc, id) => acc + (e.good?.qty?.[id] || 1), 0) || 0;
+      return goodCount > best.count ? { date: e.dateISO, count: goodCount } : best;
+    }, { date: '', count: 0 });
+
+    // Calculate monthly comparison
+    const now = new Date();
+    const thisMonthStart = format(new Date(now.getFullYear(), now.getMonth(), 1), 'yyyy-MM-dd');
+    const lastMonthStart = format(new Date(now.getFullYear(), now.getMonth() - 1, 1), 'yyyy-MM-dd');
+    const lastMonthEnd = format(new Date(now.getFullYear(), now.getMonth(), 0), 'yyyy-MM-dd');
+    
+    const thisMonthEntries = entries.filter(e => e.dateISO >= thisMonthStart);
+    const lastMonthEntries = entries.filter(e => e.dateISO >= lastMonthStart && e.dateISO <= lastMonthEnd);
+    
+    const thisMonthGoodDeeds = thisMonthEntries.reduce((sum, e) => {
+      const goodCount = e.good?.itemIds?.reduce((acc, id) => acc + (e.good?.qty?.[id] || 1), 0) || 0;
+      return sum + goodCount;
+    }, 0);
+    
+    const lastMonthGoodDeeds = lastMonthEntries.reduce((sum, e) => {
+      const goodCount = e.good?.itemIds?.reduce((acc, id) => acc + (e.good?.qty?.[id] || 1), 0) || 0;
+      return sum + goodCount;
+    }, 0);
+    
+    const monthlyChange = lastMonthGoodDeeds > 0 
+      ? Math.round(((thisMonthGoodDeeds - lastMonthGoodDeeds) / lastMonthGoodDeeds) * 100)
+      : 0;
+
+    return {
+      bestDay,
+      monthlyChange,
+      thisMonthGoodDeeds,
+      lastMonthGoodDeeds
+    };
+  }, [entries]);
+
   const handleDateSelect = (date: Date) => {
     const dateISO = format(date, 'yyyy-MM-dd');
     navigate(`/entry/${dateISO}`);
@@ -187,8 +260,8 @@ export default function Dashboard({ entries }: DashboardProps) {
         </SpiritualCard>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Stats Grid - Enhanced */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {/* Streak Card */}
         <SpiritualCard variant="default">
           <SpiritualCardContent className="p-4">
@@ -234,7 +307,7 @@ export default function Dashboard({ entries }: DashboardProps) {
           </SpiritualCardContent>
         </SpiritualCard>
 
-        {/* Weekly Deeds */}
+        {/* All-Time Good Deeds */}
         <SpiritualCard variant="default">
           <SpiritualCardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -242,12 +315,80 @@ export default function Dashboard({ entries }: DashboardProps) {
                 <CheckCircle2 className="h-5 w-5 text-secondary" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">This Week</p>
-                <p className="text-2xl font-bold">{weeklyStats.totalGoodDeeds}</p>
+                <p className="text-xs text-muted-foreground">All-Time Deeds</p>
+                <p className="text-2xl font-bold">{allTimeStats.totalGoodDeeds}</p>
               </div>
             </div>
           </SpiritualCardContent>
         </SpiritualCard>
+
+        {/* Average Actions Per Day */}
+        <SpiritualCard variant="default">
+          <SpiritualCardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-primary/10">
+                <BarChart3 className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Avg/Day</p>
+                <p className="text-2xl font-bold">{allTimeStats.averageActionsPerDay}</p>
+              </div>
+            </div>
+          </SpiritualCardContent>
+        </SpiritualCard>
+
+        {/* Consistency Rate */}
+        <SpiritualCard variant="default">
+          <SpiritualCardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-gradient-primary">
+                <TrendingUp className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Consistency</p>
+                <p className="text-2xl font-bold">{allTimeStats.consistencyRate}%</p>
+              </div>
+            </div>
+          </SpiritualCardContent>
+        </SpiritualCard>
+
+        {/* Best Day */}
+        {personalRecords.bestDay.count > 0 && (
+          <SpiritualCard variant="default" className="col-span-2">
+            <SpiritualCardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-full bg-gradient-secondary">
+                  <Award className="h-5 w-5 text-secondary-foreground" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Best Day Ever</p>
+                  <p className="text-lg font-bold">
+                    {personalRecords.bestDay.count} actions · {format(new Date(personalRecords.bestDay.date), 'MMM d')}
+                  </p>
+                </div>
+              </div>
+            </SpiritualCardContent>
+          </SpiritualCard>
+        )}
+
+        {/* Monthly Trend */}
+        {personalRecords.monthlyChange !== 0 && (
+          <SpiritualCard variant="default" className="col-span-2">
+            <SpiritualCardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-full ${personalRecords.monthlyChange > 0 ? 'bg-green-500/10' : 'bg-orange-500/10'}`}>
+                  <TrendingUp className={`h-5 w-5 ${personalRecords.monthlyChange > 0 ? 'text-green-500' : 'text-orange-500'}`} />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Monthly Trend</p>
+                  <p className={`text-lg font-bold ${personalRecords.monthlyChange > 0 ? 'text-green-500' : 'text-orange-500'}`}>
+                    {personalRecords.monthlyChange > 0 ? '↗' : '↘'} {Math.abs(personalRecords.monthlyChange)}% ({personalRecords.lastMonthGoodDeeds} → {personalRecords.thisMonthGoodDeeds})
+                  </p>
+                </div>
+              </div>
+            </SpiritualCardContent>
+          </SpiritualCard>
+        )}
       </div>
 
       {/* Recent Entries */}
