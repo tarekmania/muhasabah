@@ -4,7 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { SpiritualCard, SpiritualCardHeader, SpiritualCardTitle, SpiritualCardContent } from '@/components/ui/spiritual-card';
 import { ItemChip } from '@/components/ui/item-chip';
-import { SelectedTray } from '@/components/ui/selected-tray';
+
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
 import { Search, Sparkles, Heart, ChevronDown, Clock, TrendingUp } from 'lucide-react';
@@ -16,24 +16,14 @@ import { AIInsights } from '@/components/ai-insights';
 interface UnifiedEntryFlowProps {
   onSave: (entry: Partial<Entry>) => void;
   existingEntry?: Entry | null;
+  targetDate: string;
 }
 
-export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProps) {
+export function UnifiedEntryFlow({ onSave, existingEntry, targetDate }: UnifiedEntryFlowProps) {
   const {
     catalog,
-    categoryCounts,
-    templatesWithCounts,
-    selectedState,
-    totalSelected,
     getItemUsageCount,
     searchItems,
-    getItemsByCategory,
-    getFeaturedItems,
-    addToSelected,
-    removeFromSelected,
-    clearSelected,
-    setSelected,
-    applyTemplate,
     updateItemUsage,
   } = useCatalog();
 
@@ -41,45 +31,11 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [note, setNote] = useState(existingEntry?.good?.note || existingEntry?.improve?.note || '');
-  const [dua, setDua] = useState(existingEntry?.dua || '');
-  const [duaIndex, setDuaIndex] = useState(0);
-  
-  // Track the last hydrated entry to prevent re-hydration
-  const lastHydratedEntryId = useRef<string | null>(null);
 
-  // Load existing entry data on mount (idempotent)
+  // Update note when existing entry changes
   useEffect(() => {
-    if (existingEntry && existingEntry.id !== lastHydratedEntryId.current) {
-      // Clear existing selection first to prevent accumulation
-      setSelected({ ids: [], qty: {} });
-      
-      // Pre-select items from existing entry
-      const allItemIds = [
-        ...(existingEntry.good?.itemIds || []),
-        ...(existingEntry.improve?.itemIds || []),
-        ...(existingEntry.severeSlip?.itemIds || []),
-        ...(existingEntry.missedOpportunity?.itemIds || []),
-      ];
-      
-      const combinedQty = {
-        ...(existingEntry.good?.qty || {}),
-        ...(existingEntry.improve?.qty || {}),
-        ...(existingEntry.severeSlip?.qty || {}),
-        ...(existingEntry.missedOpportunity?.qty || {}),
-      };
-
-      // Set the complete state atomically
-      if (allItemIds.length > 0) {
-        setSelected({
-          ids: [...new Set(allItemIds)],
-          qty: combinedQty
-        });
-      }
-      
-      // Mark this entry as hydrated
-      lastHydratedEntryId.current = existingEntry.id;
-    }
-  }, [existingEntry?.id, setSelected]);
+    setNote(existingEntry?.good?.note || existingEntry?.improve?.note || '');
+  }, [existingEntry?.id]);
 
   // Search results
   const searchResults = searchQuery ? searchItems(searchQuery) : [];
@@ -110,74 +66,132 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
       .slice(0, 6);
   }, [catalog.items, getItemUsageCount]);
 
+  // Check if item is in current entry
+  const isItemInEntry = (itemId: string) => {
+    if (!existingEntry) return false;
+    return [
+      ...(existingEntry.good?.itemIds || []),
+      ...(existingEntry.improve?.itemIds || []),
+      ...(existingEntry.severeSlip?.itemIds || []),
+      ...(existingEntry.missedOpportunity?.itemIds || []),
+    ].includes(itemId);
+  };
+
+  // Direct item toggle - add or remove from entry immediately
   const handleItemToggle = (item: CatalogItem) => {
-    const isSelected = selectedState.ids.includes(item.id);
-    if (isSelected) {
-      removeFromSelected(item.id);
+    const isInEntry = isItemInEntry(item.id);
+    
+    // Track last used
+    localStorage.setItem(`lastUsed_${item.id}`, Date.now().toString());
+    
+    if (isInEntry) {
+      // Remove item from entry
+      const updatedEntry: Partial<Entry> = { ...existingEntry };
+      
+      if (updatedEntry.good?.itemIds?.includes(item.id)) {
+        updatedEntry.good = {
+          ...updatedEntry.good,
+          itemIds: updatedEntry.good.itemIds.filter(id => id !== item.id),
+          qty: { ...updatedEntry.good.qty }
+        };
+        delete updatedEntry.good.qty[item.id];
+        if (updatedEntry.good.itemIds.length === 0) updatedEntry.good = null;
+      }
+      
+      if (updatedEntry.improve?.itemIds?.includes(item.id)) {
+        updatedEntry.improve = {
+          ...updatedEntry.improve,
+          itemIds: updatedEntry.improve.itemIds.filter(id => id !== item.id),
+          qty: { ...updatedEntry.improve.qty }
+        };
+        delete updatedEntry.improve.qty[item.id];
+        if (updatedEntry.improve.itemIds.length === 0) updatedEntry.improve = null;
+      }
+      
+      if (updatedEntry.severeSlip?.itemIds?.includes(item.id)) {
+        updatedEntry.severeSlip = {
+          ...updatedEntry.severeSlip,
+          itemIds: updatedEntry.severeSlip.itemIds.filter(id => id !== item.id),
+          qty: { ...updatedEntry.severeSlip.qty }
+        };
+        delete updatedEntry.severeSlip.qty[item.id];
+        if (updatedEntry.severeSlip.itemIds.length === 0) updatedEntry.severeSlip = null;
+      }
+      
+      if (updatedEntry.missedOpportunity?.itemIds?.includes(item.id)) {
+        updatedEntry.missedOpportunity = {
+          ...updatedEntry.missedOpportunity,
+          itemIds: updatedEntry.missedOpportunity.itemIds.filter(id => id !== item.id),
+          qty: { ...updatedEntry.missedOpportunity.qty }
+        };
+        delete updatedEntry.missedOpportunity.qty[item.id];
+        if (updatedEntry.missedOpportunity.itemIds.length === 0) updatedEntry.missedOpportunity = null;
+      }
+      
+      updateItemUsage([item.id]);
+      onSave(updatedEntry);
     } else {
-      addToSelected(item.id, 1); // Default quantity of 1
+      // Add item to entry with quantity 1
+      const updatedEntry: Partial<Entry> = {
+        ...existingEntry,
+        dateISO: targetDate,
+      };
+      
+      if (item.type === 'GOOD') {
+        updatedEntry.good = {
+          itemIds: [...(existingEntry?.good?.itemIds || []), item.id],
+          qty: { ...(existingEntry?.good?.qty || {}), [item.id]: 1 },
+          note: note || existingEntry?.good?.note || undefined
+        };
+      } else if (item.type === 'IMPROVE') {
+        updatedEntry.improve = {
+          itemIds: [...(existingEntry?.improve?.itemIds || []), item.id],
+          qty: { ...(existingEntry?.improve?.qty || {}), [item.id]: 1 },
+          note: note || existingEntry?.improve?.note || undefined
+        };
+      } else if (item.type === 'SEVERE') {
+        updatedEntry.severeSlip = {
+          itemIds: [...(existingEntry?.severeSlip?.itemIds || []), item.id],
+          qty: { ...(existingEntry?.severeSlip?.qty || {}), [item.id]: 1 },
+          note: note || existingEntry?.severeSlip?.note || undefined,
+          tawbah: true
+        };
+      } else if (item.type === 'MISSED_OPPORTUNITY') {
+        updatedEntry.missedOpportunity = {
+          itemIds: [...(existingEntry?.missedOpportunity?.itemIds || []), item.id],
+          qty: { ...(existingEntry?.missedOpportunity?.qty || {}), [item.id]: 1 },
+          note: note || existingEntry?.missedOpportunity?.note || undefined,
+          intention: existingEntry?.missedOpportunity?.intention || undefined
+        };
+      }
+      
+      updateItemUsage([item.id]);
+      onSave(updatedEntry);
     }
   };
 
-  const handleAddToToday = () => {
-    if (totalSelected === 0) return;
-
-    // Track last used timestamp for recently used feature
-    selectedState.ids.forEach(id => {
-      localStorage.setItem(`lastUsed_${id}`, Date.now().toString());
-    });
-
-    const goodItemIds = selectedState.ids.filter(id => 
-      goodItems.find(item => item.id === id)
-    );
-    const improveItemIds = selectedState.ids.filter(id => 
-      improveItems.find(item => item.id === id)
-    );
-    const severeItemIds = selectedState.ids.filter(id => 
-      severeItems.find(item => item.id === id)
-    );
-    const missedOpportunityItemIds = selectedState.ids.filter(id => 
-      missedOpportunityItems.find(item => item.id === id)
-    );
-
-    const entry: Partial<Entry> = {
-      dateISO: new Date().toISOString().split('T')[0],
-      good: goodItemIds.length > 0 ? {
-        itemIds: goodItemIds,
-        note: note || undefined,
-        qty: selectedState.qty
-      } : null,
-      improve: improveItemIds.length > 0 ? {
-        itemIds: improveItemIds,
-        note: note || undefined,
-        qty: selectedState.qty
-      } : null,
-      severeSlip: severeItemIds.length > 0 ? {
-        itemIds: severeItemIds,
-        note: note || undefined,
-        tawbah: true,
-        qty: selectedState.qty
-      } : null,
-      missedOpportunity: missedOpportunityItemIds.length > 0 ? {
-        itemIds: missedOpportunityItemIds,
-        note: note || undefined,
-        intention: undefined,
-        qty: selectedState.qty
-      } : null,
-      dua: dua || undefined,
-      privacy_level: severeItemIds.length > 0 ? 'highly_sensitive' : 'normal'
-    };
-
-    // Update usage stats
-    updateItemUsage(selectedState.ids);
+  // Save note changes
+  useEffect(() => {
+    if (!existingEntry) return;
     
-    onSave(entry);
-    clearSelected();
-  };
+    const timer = setTimeout(() => {
+      const updatedEntry: Partial<Entry> = { ...existingEntry };
+      
+      if (updatedEntry.good) {
+        updatedEntry.good = { ...updatedEntry.good, note: note || undefined };
+      }
+      if (updatedEntry.improve) {
+        updatedEntry.improve = { ...updatedEntry.improve, note: note || undefined };
+      }
+      
+      onSave(updatedEntry);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, [note]);
 
   const renderItemChip = (item: CatalogItem) => {
-    const isSelected = selectedState.ids.includes(item.id);
-    const count = selectedState.qty[item.id] || 0;
+    const isInEntry = isItemInEntry(item.id);
     
     return (
       <ItemChip
@@ -185,8 +199,7 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
         emoji={item.emoji}
         label={item.title}
         variant={item.type.toLowerCase() as any}
-        selected={isSelected}
-        quantity={count}
+        selected={isInEntry}
         usageCount={getItemUsageCount(item.id)}
         onToggle={() => handleItemToggle(item)}
         size="default"
@@ -399,21 +412,10 @@ export function UnifiedEntryFlow({ onSave, existingEntry }: UnifiedEntryFlowProp
       {note && note.trim().length > 20 && (
         <AIInsights 
           note={note}
-          selectedItems={catalog.items.filter(item => selectedState.ids.includes(item.id)).map(item => item.title)}
+          selectedItems={catalog.items.filter(item => isItemInEntry(item.id)).map(item => item.title)}
           type="reflection"
         />
       )}
-
-      {/* Selected Tray */}
-      <SelectedTray
-        selectedItems={catalog.items.filter(item => selectedState.ids.includes(item.id))}
-        selectedState={selectedState}
-        onCountChange={() => {}}
-        onRemoveItem={removeFromSelected}
-        onSaveToday={handleAddToToday}
-        onClear={clearSelected}
-        isVisible={totalSelected > 0}
-      />
     </div>
   );
 }

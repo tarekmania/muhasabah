@@ -156,54 +156,10 @@ export function DailyLedger({ entry, catalogItems, date, entries, onDateChange, 
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
-      {/* Header with Date Navigation */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Scale className="h-6 w-6 text-primary" />
-          <h2 className="text-2xl font-bold">Spiritual Balance Sheet</h2>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => navigateDate('prev')}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="w-[240px] justify-start text-left font-normal">
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {format(selectedDate, 'PPP')}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={handleDateSelect}
-                initialFocus
-                className={cn("p-3 pointer-events-auto")}
-                modifiers={{
-                  hasEntry: datesWithEntries
-                }}
-                modifiersStyles={{
-                  hasEntry: { fontWeight: 'bold', textDecoration: 'underline' }
-                }}
-              />
-            </PopoverContent>
-          </Popover>
-
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => navigateDate('next')}
-            disabled={format(selectedDate, 'yyyy-MM-dd') >= format(new Date(), 'yyyy-MM-dd')}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+      {/* Header */}
+      <div className="flex items-center gap-2">
+        <Scale className="h-6 w-6 text-primary" />
+        <h2 className="text-2xl font-bold">Spiritual Balance Sheet</h2>
       </div>
 
       {!entry ? (

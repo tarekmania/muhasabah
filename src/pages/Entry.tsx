@@ -165,6 +165,7 @@ export default function Entry({ entries, onSave, onUpdate }: EntryPageProps) {
       <UnifiedEntryFlow
         onSave={handleSave}
         existingEntry={existingEntry}
+        targetDate={targetDate}
       />
     </div>
   );
