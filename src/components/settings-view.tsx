@@ -22,6 +22,7 @@ export function SettingsView({ settings, onUpdateSettings, onPanicDelete }: Sett
     minute: settings.reminderMinute
   });
   const [showPanicConfirm, setShowPanicConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [dbStats, setDbStats] = useState<{ totalEntries: number; oldestEntry?: string; newestEntry?: string } | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
@@ -52,20 +53,36 @@ export function SettingsView({ settings, onUpdateSettings, onPanicDelete }: Sett
     return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
   };
 
-  const handlePanicDelete = () => {
+  const handlePanicDelete = async () => {
     if (!showPanicConfirm) {
       setShowPanicConfirm(true);
       setTimeout(() => setShowPanicConfirm(false), 5000); // Auto-hide after 5 seconds
       return;
     }
     
-    onPanicDelete();
-    setShowPanicConfirm(false);
-    toast({
-      title: "All data deleted",
-      description: "Your privacy is protected.",
-      variant: "destructive"
-    });
+    try {
+      setIsDeleting(true);
+      await onPanicDelete();
+      
+      toast({
+        title: "All data deleted",
+        description: "Your privacy is protected. Reloading...",
+      });
+      
+      // Reload the page to ensure clean slate
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    } catch (error) {
+      console.error('Panic delete failed:', error);
+      toast({
+        title: "Delete failed",
+        description: error instanceof Error ? error.message : "Please close other tabs and try again",
+        variant: "destructive"
+      });
+      setIsDeleting(false);
+      setShowPanicConfirm(false);
+    }
   };
 
   const handleExportData = async () => {
@@ -326,10 +343,11 @@ export function SettingsView({ settings, onUpdateSettings, onPanicDelete }: Sett
             <Button
               variant="destructive"
               onClick={handlePanicDelete}
+              disabled={isDeleting}
               className={showPanicConfirm ? "bg-destructive/80" : ""}
             >
               <Trash2 className="h-4 w-4 mr-2" />
-              {showPanicConfirm ? "Tap again to confirm deletion" : "Panic Delete All Data"}
+              {isDeleting ? "Deleting..." : showPanicConfirm ? "Tap again to confirm deletion" : "Panic Delete All Data"}
             </Button>
             {showPanicConfirm && (
               <p className="text-xs text-destructive">

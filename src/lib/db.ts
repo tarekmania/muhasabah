@@ -1,4 +1,4 @@
-import { openDB, DBSchema, IDBPDatabase } from 'idb';
+import { openDB, DBSchema, IDBPDatabase, deleteDB } from 'idb';
 import type { Entry, Settings } from '@/types';
 import { CURRENT_DB_VERSION, applyMigrations, transformEntry, transformSettings, transformEntries, getSafeVersion, isCompatibleVersion } from './migrations';
 import { validateEntry, validateSettings, validateEntries } from './validators';
@@ -49,7 +49,14 @@ let dbInstance: IDBPDatabase<MuhasabahDB> | null = null;
  */
 export async function getDB(): Promise<IDBPDatabase<MuhasabahDB>> {
   if (dbInstance) {
-    return dbInstance;
+    // Check if version is outdated - if so, close and reopen to trigger upgrade
+    if (dbInstance.version < DB_VERSION) {
+      console.log(`DB version outdated (${dbInstance.version} < ${DB_VERSION}), reopening...`);
+      dbInstance.close();
+      dbInstance = null;
+    } else {
+      return dbInstance;
+    }
   }
 
   dbInstance = await openDB<MuhasabahDB>(DB_NAME, DB_VERSION, {
@@ -219,16 +226,45 @@ export async function getSettings(): Promise<Settings | undefined> {
  * Clear all data (for panic delete)
  */
 export async function clearAllData(): Promise<void> {
-  const db = await getDB();
-  const tx = db.transaction(['entries', 'settings', 'metadata', 'insights'], 'readwrite');
-  await Promise.all([
-    tx.objectStore('entries').clear(),
-    tx.objectStore('settings').clear(),
-    tx.objectStore('metadata').clear(),
-    tx.objectStore('insights').clear(),
-  ]);
-  await tx.done;
-  console.log('All data cleared from IndexedDB');
+  try {
+    const db = await getDB();
+    
+    // Only use stores that actually exist
+    const existingStores = Array.from(db.objectStoreNames);
+    const storesToClear = (['entries', 'settings', 'metadata', 'insights'] as const).filter(
+      store => existingStores.includes(store)
+    ) as ('entries' | 'settings' | 'metadata' | 'insights')[];
+    
+    if (storesToClear.length === 0) {
+      console.warn('No stores to clear');
+      return;
+    }
+    
+    const tx = db.transaction(storesToClear, 'readwrite');
+    await Promise.all(storesToClear.map(store => tx.objectStore(store).clear()));
+    await tx.done;
+    console.log('All data cleared from IndexedDB');
+  } catch (error) {
+    console.error('Error clearing data, deleting entire database:', error);
+    
+    // If clearing fails (e.g., NotFoundError), delete the entire database
+    if (dbInstance) {
+      dbInstance.close();
+      dbInstance = null;
+    }
+    
+    try {
+      await deleteDB(DB_NAME);
+      console.log('Database deleted successfully');
+      
+      // Reinitialize the database with fresh schema
+      await getDB();
+      console.log('Database reinitialized');
+    } catch (deleteError) {
+      console.error('Failed to delete database:', deleteError);
+      throw new Error('Please close all other tabs with this app and try again');
+    }
+  }
 }
 
 // Insights management
