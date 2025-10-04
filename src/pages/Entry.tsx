@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { format } from 'date-fns';
-import { Check, FileText, Scale } from 'lucide-react';
+import { Check, FileText, Scale, Zap, Compass } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SpiritualCard, SpiritualCardContent, SpiritualCardHeader, SpiritualCardTitle } from '@/components/ui/spiritual-card';
 import { UnifiedEntryFlow } from '@/components/unified-entry-flow';
+import { GuidedEntryFlow } from '@/components/guided-entry/GuidedEntryFlow';
 import { DailyLedger } from '@/components/daily-ledger';
 import { CalendarWidget } from '@/components/calendar-widget';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +24,19 @@ export default function Entry({ entries, onSave, onUpdate }: EntryPageProps) {
   const navigate = useNavigate();
   const { date } = useParams<{ date?: string }>();
   const { catalog } = useCatalog();
+  
+  // Entry mode state (quick or guided)
+  const [entryMode, setEntryMode] = useState<'quick' | 'guided'>(() => {
+    const saved = localStorage.getItem('preferredEntryMode');
+    return (saved as 'quick' | 'guided') || 'quick';
+  });
+
+  // Persist entry mode preference
+  const handleModeChange = (mode: string) => {
+    const newMode = mode as 'quick' | 'guided';
+    setEntryMode(newMode);
+    localStorage.setItem('preferredEntryMode', newMode);
+  };
   
   // Determine the date to work with
   const targetDate = date || format(new Date(), 'yyyy-MM-dd');
@@ -161,28 +175,54 @@ export default function Entry({ entries, onSave, onUpdate }: EntryPageProps) {
         </SpiritualCardContent>
       </SpiritualCard>
 
-      {/* Daily Balance Sheet - Shown First */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 px-1">
-          <Scale className="h-5 w-5 text-muted-foreground" />
-          <h2 className="text-base font-medium text-muted-foreground">Spiritual Balance</h2>
-        </div>
-        <DailyLedger
-          entry={existingEntry || null}
-          catalogItems={catalog.items}
-          date={targetDate}
-          entries={entries}
-          onDateChange={handleDateChange}
-          onQuantityChange={handleQuantityChange}
-        />
-      </div>
+      {/* Entry Mode Tabs */}
+      <Tabs value={entryMode} onValueChange={handleModeChange} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 h-12">
+          <TabsTrigger value="quick" className="gap-2">
+            <Zap className="h-4 w-4" />
+            Quick Entry
+          </TabsTrigger>
+          <TabsTrigger value="guided" className="gap-2">
+            <Compass className="h-4 w-4" />
+            Guided Journey
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Entry Form */}
-      <UnifiedEntryFlow
-        onSave={handleSave}
-        existingEntry={existingEntry}
-        targetDate={targetDate}
-      />
+        <TabsContent value="quick" className="mt-4 space-y-4">
+          {/* Daily Balance Sheet */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 px-1">
+              <Scale className="h-5 w-5 text-muted-foreground" />
+              <h2 className="text-base font-medium text-muted-foreground">Spiritual Balance</h2>
+            </div>
+            <DailyLedger
+              entry={existingEntry || null}
+              catalogItems={catalog.items}
+              date={targetDate}
+              entries={entries}
+              onDateChange={handleDateChange}
+              onQuantityChange={handleQuantityChange}
+            />
+          </div>
+
+          {/* Entry Form */}
+          <UnifiedEntryFlow
+            onSave={handleSave}
+            existingEntry={existingEntry}
+            targetDate={targetDate}
+          />
+        </TabsContent>
+
+        <TabsContent value="guided" className="mt-4">
+          <GuidedEntryFlow
+            onSave={handleSave}
+            onExit={() => setEntryMode('quick')}
+            existingEntry={existingEntry}
+            targetDate={targetDate}
+            catalogItems={catalog.items}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
